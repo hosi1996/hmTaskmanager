@@ -75,9 +75,10 @@ async function start() {
     const [cmd, target] = ent ? text.slice(1, ent.length).split('@') : [null, null];
     const forUs = !target || target.toLowerCase() === ctx.me.username.toLowerCase();
     const isTaskCmd = !!cmd && forUs && [command.toLowerCase(), 'task'].includes(cmd.toLowerCase());
-    if (cmd) log({ msg: 'command received', cmd, forUs, hasReply: !!m.reply_to_message, isTaskCmd });
+    const replied = m.reply_to_message ?? m.external_reply;
+    if (cmd) log({ msg: 'command received', cmd, forUs, hasReply: !!replied, isTaskCmd, keys: Object.keys(m), thread: m.message_thread_id, chatType: ctx.chat.type });
 
-    if (isTaskCmd && !m.reply_to_message) {
+    if (isTaskCmd && !replied) {
       return ctx.reply(`برای ساخت تسک، روی پیام موردنظر ریپلای کنید و /${command} بفرستید.`, { reply_parameters: { message_id: m.message_id } });
     }
     if (!isTaskCmd) {
@@ -89,7 +90,7 @@ async function start() {
       return;
     }
 
-    const src = m.reply_to_message;
+    const src = replied;
     const files = [];
     if (src.photo?.length) files.push({ fileId: src.photo.at(-1).file_id, name: `photo-${src.message_id}.jpg`, mime: 'image/jpeg' });
     if (src.document) files.push({ fileId: src.document.file_id, name: src.document.file_name ?? `file-${src.message_id}`, mime: src.document.mime_type ?? 'application/octet-stream' });
@@ -114,7 +115,7 @@ async function start() {
   process.once('SIGTERM', () => bot.stop());
   await bot.start({
     allowed_updates: ['message', 'channel_post', 'my_chat_member'],
-    onStart: (i) => log({ msg: 'bot started', username: i.username }),
+    onStart: (i) => log({ msg: 'bot started', username: i.username, can_read_all_group_messages: i.can_read_all_group_messages }),
   });
 }
 

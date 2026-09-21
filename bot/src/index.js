@@ -110,13 +110,13 @@ async function start() {
 }
 
 if (!TOKEN) {
-  log({ level: 'warn', msg: 'TELEGRAM_BOT_TOKEN تنظیم نشده؛ بات غیرفعال است' });
+  log({ level: 'warn', msg: 'TELEGRAM_BOT_TOKEN is not set; bot is disabled' });
   setInterval(() => {}, 1 << 30); // کانتینر بالا بماند تا restart-loop نشود
 } else {
   try {
     await start();
   } catch (e) {
-    log({ level: 'error', msg: 'بات راه‌اندازی نشد؛ توکن TELEGRAM_BOT_TOKEN را در .env بررسی کنید (نمونه: 123456:ABC-DEF...)', err: e.description ?? e.message });
+    log({ level: 'error', msg: 'Bot failed to start; check TELEGRAM_BOT_TOKEN in .env (format: 123456789:AAxxxx, no spaces or quotes)', err: e.description ?? e.message });
     setInterval(() => {}, 1 << 30); // restart-loop نشود
   }
 }

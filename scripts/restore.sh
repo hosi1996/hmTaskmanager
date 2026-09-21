@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# بازیابی با یک دستور:
+# Restore with one command:
 #   ./scripts/restore.sh /var/backups/hmtm/db-20260921-033000.dump [/var/backups/hmtm/uploads-20260921-033000.tgz]
-# ⚠ دیتای فعلی دیتابیس با محتوای بک‌آپ جایگزین می‌شود.
+# WARNING: current database contents are replaced by the backup.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 cd "$ROOT"
-DUMP="${1:?مسیر فایل db-*.dump را بدهید}"; UPL="${2:-}"
-[ -f "$DUMP" ] || { echo "فایل یافت نشد: $DUMP" >&2; exit 1; }
+DUMP="${1:?Provide path to db-*.dump file}"; UPL="${2:-}"
+[ -f "$DUMP" ] || { echo "File not found: $DUMP" >&2; exit 1; }
 envget() { grep -E "^$1=" .env | head -1 | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//; s/[[:space:]]+$//'; }
 MODE="$(envget DB_MODE)"; PGC="$(envget PG_CONTAINER)"; DB="$(envget DB_NAME)"; USER="$(envget DB_USER)"; PASS="$(envget DB_PASS)"
 
-read -r -p "دیتابیس $DB با این بک‌آپ جایگزین شود؟ (yes/no) " a </dev/tty
+read -r -p "Replace database $DB with this backup? (yes/no) " a </dev/tty
 [ "$a" = "yes" ] || exit 1
 
 docker compose stop backend bot frontend
@@ -24,4 +24,4 @@ if [ -n "$UPL" ]; then
   docker run --rm -v hmtm_uploads:/data -v "$(dirname "$(readlink -f "$UPL")")":/in:ro alpine sh -c "rm -rf /data/* && tar xzf /in/$(basename "$UPL") -C /data --strip-components=1 && chown -R 1000:1000 /data"
 fi
 docker compose up -d
-echo "✔ بازیابی انجام شد"
+echo "OK Restore complete"

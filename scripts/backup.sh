@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# بک‌آپ دیتابیس + فایل‌های آپلودی؛ نگه‌داری N روز آخر (BACKUP_KEEP_DAYS)
+# Backup database + uploaded files; keep the last N days (BACKUP_KEEP_DAYS)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 cd "$ROOT"
@@ -20,4 +20,4 @@ fi
 docker cp hmtm-backend:/data/uploads - 2>/dev/null | gzip > "$DIR/uploads-$TS.tgz" || true
 
 find "$DIR" -maxdepth 1 \( -name 'db-*.dump' -o -name 'uploads-*.tgz' \) -mtime +"$KEEP" -delete
-echo "✔ بک‌آپ ساخته شد: $DIR/db-$TS.dump"
+echo "OK Backup created: $DIR/db-$TS.dump"

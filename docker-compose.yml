@@ -1,0 +1,78 @@
+# سرویس‌های اختصاصی hmTaskManager — جدا از بقیه‌ی سرویس‌های سرور
+# PostgreSQL و Nginx روی خود سرور هستند و اینجا اجرا نمی‌شوند.
+name: hmtm
+
+x-common: &common
+  restart: unless-stopped
+  env_file: .env
+  networks: [hmtm-net]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  redis:
+    <<: *common
+    image: redis:7-alpine
+    container_name: hmtm-redis
+    env_file: []
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    volumes: [hmtm_redis:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    <<: *common
+    build: ./backend
+    image: hmtm-backend
+    container_name: hmtm-backend
+    depends_on:
+      redis: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      PORT: "3111"
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT:-5432}/${DB_NAME}?schema=public
+      REDIS_URL: redis://redis:6379
+      UPLOAD_DIR: /data/uploads
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["127.0.0.1:${BACKEND_PORT:-3111}:3111"]
+    volumes: [hmtm_uploads:/data/uploads]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3111/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  frontend:
+    <<: *common
+    build: ./frontend
+    image: hmtm-frontend
+    container_name: hmtm-frontend
+    env_file: []
+    depends_on: [backend]
+    ports: ["127.0.0.1:${FRONTEND_PORT:-3110}:3110"]
+
+  bot:
+    <<: *common
+    build: ./bot
+    image: hmtm-bot
+    container_name: hmtm-bot
+    depends_on:
+      backend: { condition: service_healthy }
+    environment:
+      BACKEND_URL: http://backend:3111
+
+networks:
+  hmtm-net:
+    name: hmtm-net
+    external: true # توسط install.sh ساخته می‌شود؛ کانتینر PostgreSQL موجود (در صورت وجود) هم به آن متصل می‌شود
+
+volumes:
+  hmtm_redis:
+    name: hmtm_redis
+  hmtm_uploads:
+    name: hmtm_uploads

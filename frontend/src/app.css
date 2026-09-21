@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: 'Vazirmatn', system-ui, sans-serif;
+  --color-brand: #6366f1;
+}
+
+html { font-family: var(--font-sans); }
+body { @apply bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200; }
+
+@layer components {
+  .card { @apply rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900; }
+  .btn-primary { @apply inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition disabled:opacity-50 bg-brand text-white hover:bg-indigo-600; }
+  .btn-ghost { @apply inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition disabled:opacity-50 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800; }
+  .btn-danger { @apply inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition disabled:opacity-50 text-red-600 hover:bg-red-50 dark:hover:bg-red-950; }
+  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900; }
+  .btn { @apply inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition disabled:opacity-50; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs; }
+  .skeleton { @apply animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800; }
+}
+
+.md p { margin: 0.4em 0; }
+.md ul { list-style: disc; padding-inline-start: 1.4em; }
+.md ol { list-style: decimal; padding-inline-start: 1.4em; }
+.md a { color: var(--color-brand); text-decoration: underline; }
+.md code { background: rgb(148 163 184 / 0.2); padding: 0 0.3em; border-radius: 4px; direction: ltr; unicode-bidi: embed; }
+.md pre { background: rgb(148 163 184 / 0.15); padding: 0.6em; border-radius: 8px; overflow: auto; direction: ltr; }
+.md img { max-width: 100%; border-radius: 8px; }
+
+.fade-in { animation: fade 0.15s ease-out; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }

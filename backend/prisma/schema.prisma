@@ -1,0 +1,382 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SystemRole {
+  OWNER
+  STAFF
+  CLIENT
+}
+
+enum ProjectRole {
+  VIEWER
+  REPORTER
+  CONTRIBUTOR
+  MANAGER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ───────── کاربران ─────────
+model User {
+  id             String     @id @default(uuid()) @db.Uuid
+  username       String     @unique
+  email          String?    @unique
+  name           String
+  passwordHash   String
+  role           SystemRole @default(STAFF)
+  active         Boolean    @default(true)
+  totpSecret     String?
+  totpEnabled    Boolean    @default(false)
+  telegramUserId String?    @unique
+  telegramChatId String?
+  notifyPrefs    Json       @default("{}")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  memberships   ProjectMember[]
+  assigned      TaskAssignee[]
+  watching      TaskWatcher[]
+  createdTasks  Task[]          @relation("TaskCreator")
+  comments      Comment[]
+  notifications Notification[]
+  savedViews    SavedView[]
+  timeEntries   TimeEntry[]
+  activities    ActivityLog[]
+}
+
+model Invite {
+  id          String       @id @default(uuid()) @db.Uuid
+  tokenHash   String       @unique
+  email       String?
+  role        SystemRole   @default(CLIENT)
+  projectId   String?      @db.Uuid
+  projectRole ProjectRole?
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdById String       @db.Uuid
+  createdAt   DateTime     @default(now())
+}
+
+// ───────── پروژه ─────────
+model Project {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  description String        @default("")
+  status      ProjectStatus @default(ACTIVE)
+  color       String        @default("#6366f1")
+  icon        String        @default("📁")
+  type        String        @default("")
+  startDate   DateTime?
+  deadline    DateTime?
+  taskSeq     Int           @default(0)
+  isTemplate  Boolean       @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  members    ProjectMember[]
+  columns    BoardColumn[]
+  labels     Label[]
+  milestones Milestone[]
+  tasks      Task[]
+  telegram   TelegramGroup?
+  activities ActivityLog[]
+  taskTemplates TaskTemplate[]
+
+  @@index([status])
+}
+
+model ProjectMember {
+  projectId String      @db.Uuid
+  userId    String      @db.Uuid
+  role      ProjectRole @default(VIEWER)
+  createdAt DateTime    @default(now())
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@index([userId])
+}
+
+model BoardColumn {
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @db.Uuid
+  name      String
+  position  Float
+  isDone    Boolean @default(false)
+  isDefault Boolean @default(false) // ستون شروع (تسک‌های جدید)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@index([projectId, position])
+}
+
+model Category {
+  id       String @id @default(uuid()) @db.Uuid
+  key      String @unique
+  name     String
+  color    String @default("#64748b")
+  position Int    @default(0)
+  tasks    Task[]
+}
+
+model Label {
+  id        String      @id @default(uuid()) @db.Uuid
+  projectId String      @db.Uuid
+  name      String
+  color     String      @default("#f59e0b")
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     TaskLabel[]
+
+  @@unique([projectId, name])
+}
+
+model Milestone {
+  id        String    @id @default(uuid()) @db.Uuid
+  projectId String    @db.Uuid
+  name      String
+  startDate DateTime?
+  dueDate   DateTime?
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+}
+
+// ───────── تسک ─────────
+model Task {
+  id          String    @id @default(uuid()) @db.Uuid
+  projectId   String    @db.Uuid
+  number      Int
+  title       String
+  description String    @default("")
+  columnId    String    @db.Uuid
+  categoryId  String?   @db.Uuid
+  milestoneId String?   @db.Uuid
+  priority    Priority  @default(MEDIUM)
+  position    Float     @default(0)
+  startDate   DateTime?
+  dueDate     DateTime?
+  estimateMin Int?
+  recurrence  String? // DAILY | WEEKLY | MONTHLY
+  completedAt DateTime?
+  dueNotifiedAt DateTime?
+  createdById String    @db.Uuid
+  telegramChatId    String?
+  telegramMessageId String?
+  telegramSender    String?
+  deletedAt   DateTime?
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project    Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  column     BoardColumn   @relation(fields: [columnId], references: [id])
+  category   Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  milestone  Milestone?    @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  createdBy  User          @relation("TaskCreator", fields: [createdById], references: [id])
+  assignees  TaskAssignee[]
+  watchers   TaskWatcher[]
+  labels     TaskLabel[]
+  checklist  ChecklistItem[]
+  comments   Comment[]
+  attachments Attachment[]
+  activities ActivityLog[]
+  timeEntries TimeEntry[]
+  blocks     TaskDependency[] @relation("Blocker")
+  blockedBy  TaskDependency[] @relation("Blocked")
+
+  @@unique([projectId, number])
+  @@index([projectId, columnId, position])
+  @@index([dueDate])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model TaskAssignee {
+  taskId String @db.Uuid
+  userId String @db.Uuid
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+  @@index([userId])
+}
+
+model TaskWatcher {
+  taskId String @db.Uuid
+  userId String @db.Uuid
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+  @@index([userId])
+}
+
+model TaskLabel {
+  taskId  String @db.Uuid
+  labelId String @db.Uuid
+  task    Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+}
+
+model ChecklistItem {
+  id       String  @id @default(uuid()) @db.Uuid
+  taskId   String  @db.Uuid
+  text     String
+  done     Boolean @default(false)
+  position Float   @default(0)
+  task     Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model TaskDependency {
+  blockerId String @db.Uuid // این تسک، مسدودکننده است
+  blockedId String @db.Uuid // این تسک، مسدود‌شده است
+  blocker   Task   @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   Task   @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @db.Uuid
+  authorId  String   @db.Uuid
+  body      String
+  editedAt  DateTime?
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+
+  @@index([taskId, createdAt])
+}
+
+model Attachment {
+  id         String   @id @default(uuid()) @db.Uuid // همان نام فایل روی دیسک
+  taskId     String   @db.Uuid
+  name       String
+  mime       String
+  size       Int
+  uploadedById String? @db.Uuid
+  createdAt  DateTime @default(now())
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model TimeEntry {
+  id        String    @id @default(uuid()) @db.Uuid
+  taskId    String    @db.Uuid
+  userId    String    @db.Uuid
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  minutes   Int       @default(0)
+  note      String    @default("")
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([taskId])
+  @@index([userId, endedAt])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String?  @db.Uuid
+  taskId    String?  @db.Uuid
+  userId    String?  @db.Uuid
+  action    String
+  data      Json     @default("{}")
+  createdAt DateTime @default(now())
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([taskId, createdAt])
+  @@index([projectId, createdAt])
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  type      String
+  title     String
+  body      String    @default("")
+  link      String    @default("")
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model SavedView {
+  id      String @id @default(uuid()) @db.Uuid
+  userId  String @db.Uuid
+  name    String
+  filters Json
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model TaskTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String?  @db.Uuid
+  name        String
+  data        Json // {title, description, priority, categoryKey, checklist:[]}
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ───────── تلگرام ─────────
+model TelegramGroup {
+  id        String   @id @default(uuid()) @db.Uuid
+  chatId    String   @unique
+  title     String
+  type      String   @default("group")
+  active    Boolean  @default(true)
+  projectId String?  @unique @db.Uuid
+  createdAt DateTime @default(now())
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  messages  TelegramMessage[]
+}
+
+model TelegramMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  chatId    String
+  messageId String
+  fromId    String?
+  fromName  String
+  text      String
+  replyToId String?
+  createdAt DateTime @default(now())
+  group     TelegramGroup @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
+
+  @@unique([chatId, messageId])
+  @@index([chatId, createdAt])
+}
+
+model Setting {
+  key   String @id
+  value Json
+}

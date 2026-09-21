@@ -43,9 +43,9 @@
   <form class="card fade-in w-full max-w-lg space-y-3 p-4 shadow-xl" onsubmit={submit}>
     <div class="font-semibold">تسک سریع</div>
     {#if !projects.length}
-      <p class="text-sm text-slate-500">پروژه‌ای که بتوانید در آن تسک بسازید وجود ندارد.</p>
+      <p class="text-sm text-zinc-500">پروژه‌ای که بتوانید در آن تسک بسازید وجود ندارد.</p>
     {:else}
-      <select class="input" bind:value={pid}>{#each projects as p}<option value={p.id}>{p.icon} {p.name}</option>{/each}</select>
+      <select class="input" bind:value={pid}>{#each projects as p}<option value={p.id}>{p.name}</option>{/each}</select>
       <input bind:this={input} class="input" placeholder="عنوان تسک…" bind:value={title} maxlength="300" />
     {/if}
     <div class="flex justify-end gap-2">

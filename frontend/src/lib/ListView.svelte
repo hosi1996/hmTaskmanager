@@ -1,4 +1,6 @@
 <script>
+  import Icon from './Icon.svelte';
+  import EmptyState from './EmptyState.svelte';
   import { api, qs } from './api.js';
   import { notice } from './state.svelte.js';
   import { PRIORITY } from './format.js';
@@ -49,7 +51,7 @@
   <select class="input !w-auto" bind:value={f.categoryId}><option value="">همه‌ی گروه‌ها</option>{#each categories as c}<option value={c.id}>{c.name}</option>{/each}</select>
   <select class="input !w-auto" bind:value={f.assignee}><option value="">همه‌ی اساین‌شده‌ها</option><option value="me">من</option>{#each members as m}<option value={m.user.id}>{m.user.name}</option>{/each}</select>
   <select class="input !w-auto" bind:value={f.sort}><option value="due">ددلاین</option><option value="priority">اولویت</option><option value="created">جدیدترین</option></select>
-  <button class="btn-ghost" onclick={saveView}>☆ ذخیره فیلتر</button>
+  <button class="btn-ghost" onclick={saveView}><Icon name="bookmark" size={15} /> ذخیره فیلتر</button>
   {#each views as v}
     <span class="chip bg-indigo-50 text-brand dark:bg-indigo-950"><button onclick={() => (f = { ...f, ...v.filters })}>{v.name}</button><button class="opacity-60" onclick={() => delView(v)} aria-label="حذف">×</button></span>
   {/each}
@@ -68,6 +70,6 @@
 
 <div class="card overflow-hidden">
   {#if !tasks}{#each Array(5) as _}<div class="skeleton m-3 h-8"></div>{/each}
-  {:else if !tasks.length}<div class="p-10 text-center text-slate-400"><div class="text-4xl">🗒️</div>تسکی با این فیلترها نیست.</div>
+  {:else if !tasks.length}<EmptyState icon="list" title="تسکی پیدا نشد" text="فیلترها را تغییر دهید یا تسک جدید بسازید." />
   {:else}{#each tasks as t (t.id)}<TaskRow task={t} selected={sel.includes(t.id)} onselect={canManage ? toggle : null} />{/each}{/if}
 </div>

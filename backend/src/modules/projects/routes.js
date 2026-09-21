@@ -15,7 +15,7 @@ const projectBody = z.object({
   description: z.string().max(20000).optional(),
   status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETED', 'ARCHIVED']).optional(),
   color: z.string().max(20).optional(),
-  icon: z.string().max(8).optional(),
+  icon: z.string().max(32).optional(),
   type: z.string().max(60).optional(),
   startDate: z.coerce.date().nullable().optional(),
   deadline: z.coerce.date().nullable().optional(),

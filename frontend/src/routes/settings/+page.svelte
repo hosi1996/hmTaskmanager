@@ -1,4 +1,5 @@
 <script>
+  import Icon from '$lib/Icon.svelte';
   import { api } from '$lib/api.js';
   import { app, notice } from '$lib/state.svelte.js';
   import { fmtDateTime } from '$lib/format.js';
@@ -45,7 +46,7 @@
   <section class="card space-y-3 p-4 text-sm">
     <b>اعلان‌ها</b>
     <input class="input" bind:value={name} placeholder="نام" />
-    <table class="w-full"><thead class="text-xs text-slate-500"><tr><th class="text-start">رویداد</th><th>پنل</th><th>تلگرام</th></tr></thead>
+    <table class="w-full"><thead class="text-xs text-zinc-500"><tr><th class="text-start">رویداد</th><th>پنل</th><th>تلگرام</th></tr></thead>
       <tbody>{#each Object.entries(EVENTS) as [ev, label]}<tr><td class="py-1">{label}</td>
         <td class="text-center"><input type="checkbox" checked={on(ev, 'panel')} onchange={(e) => setPref(ev, 'panel', e.target.checked)} /></td>
         <td class="text-center"><input type="checkbox" checked={on(ev, 'telegram')} onchange={(e) => setPref(ev, 'telegram', e.target.checked)} /></td></tr>{/each}</tbody></table>
@@ -56,10 +57,10 @@
   <section class="card space-y-3 p-4 text-sm">
     <b>حساب تلگرام</b>
     {#if app.user.telegramLinked}
-      <div>✅ متصل است. <button class="btn-danger" onclick={tgUnlink}>قطع اتصال</button></div>
+      <div><Icon name="check" size={16} class="inline text-emerald-500" /> متصل است. <button class="btn-danger" onclick={tgUnlink}>قطع اتصال</button></div>
     {:else}
-      <p class="text-slate-500">کد بگیرید و در چت خصوصی با بات <code dir="ltr">/start CODE</code> بفرستید.</p>
-      {#if tg}<div class="rounded bg-slate-100 p-2 text-center font-mono text-lg dark:bg-slate-800" dir="ltr">/start {tg}</div>{:else}<button class="btn-primary" onclick={tgLink}>دریافت کد اتصال</button>{/if}
+      <p class="text-zinc-500">کد بگیرید و در چت خصوصی با بات <code dir="ltr">/start CODE</code> بفرستید.</p>
+      {#if tg}<div class="rounded bg-zinc-100 p-2 text-center font-mono text-lg dark:bg-white/[0.06]" dir="ltr">/start {tg}</div>{:else}<button class="btn-primary" onclick={tgLink}>دریافت کد اتصال</button>{/if}
     {/if}
   </section>
 
@@ -70,13 +71,13 @@
       <input class="input" type="password" placeholder="رمز جدید (حداقل ۸ کاراکتر)" bind:value={pw.next} dir="ltr" minlength="8" required />
       <button class="btn-primary">تغییر رمز</button>
     </form>
-    <hr class="border-slate-200 dark:border-slate-800" />
+    <hr class="border-zinc-200 dark:border-white/[0.08]" />
     <b>ورود دو مرحله‌ای (2FA)</b>
     {#if app.user.totpEnabled}
-      <div>✅ فعال است. <button class="btn-danger" onclick={disable2fa}>غیرفعال‌سازی</button></div>
+      <div><Icon name="check" size={16} class="inline text-emerald-500" /> فعال است. <button class="btn-danger" onclick={disable2fa}>غیرفعال‌سازی</button></div>
     {:else if twofa}
-      <p class="text-slate-500">این کلید را در اپ Authenticator وارد کنید و کد را بنویسید:</p>
-      <div class="rounded bg-slate-100 p-2 text-center font-mono dark:bg-slate-800" dir="ltr">{twofa.secret}</div>
+      <p class="text-zinc-500">این کلید را در اپ Authenticator وارد کنید و کد را بنویسید:</p>
+      <div class="rounded bg-zinc-100 p-2 text-center font-mono dark:bg-white/[0.06]" dir="ltr">{twofa.secret}</div>
       <input class="input" placeholder="کد ۶ رقمی" bind:value={code} dir="ltr" inputmode="numeric" />
       <button class="btn-primary" onclick={enable2fa}>فعال‌سازی</button>
     {:else}<button class="btn-outline" onclick={setup2fa}>راه‌اندازی</button>{/if}
@@ -86,8 +87,8 @@
     <b>نشست‌های فعال</b>
     <div class="mt-2 space-y-2">
       {#each sessions as s}
-        <div class="flex items-center gap-2 rounded-lg bg-slate-50 p-2 dark:bg-slate-800/50">
-          <div class="min-w-0 flex-1"><div class="truncate text-xs" dir="ltr">{s.ua || 'نامشخص'}</div><div class="text-xs text-slate-400">{s.ip} · {fmtDateTime(s.createdAt)}</div></div>
+        <div class="flex items-center gap-2 rounded-lg bg-zinc-50 p-2 dark:bg-white/[0.04]">
+          <div class="min-w-0 flex-1"><div class="truncate text-xs" dir="ltr">{s.ua || 'نامشخص'}</div><div class="text-xs text-zinc-400">{s.ip} · {fmtDateTime(s.createdAt)}</div></div>
           {#if s.current}<span class="chip bg-emerald-100 text-emerald-700">این دستگاه</span>{:else}<button class="btn-danger" onclick={() => kill(s)}>خروج</button>{/if}
         </div>
       {/each}

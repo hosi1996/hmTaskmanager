@@ -1,4 +1,5 @@
 <script>
+  import Icon from '$lib/Icon.svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { api } from '$lib/api.js';
@@ -132,16 +133,16 @@
 {#if !t}
   <div class="skeleton h-10 w-96 max-w-full"></div><div class="skeleton mt-4 h-64"></div>
 {:else}
-  <div class="mb-3 text-sm text-slate-500"><a class="text-brand" href="/projects/{t.projectId}">{t.project.name}</a> / #{t.number}
-    {#if t.telegramSender}<span class="chip ms-2 bg-sky-100 text-sky-700 dark:bg-sky-950">✈ تلگرام · {t.telegramSender}</span>{/if}
+  <div class="mb-3 text-sm text-zinc-500"><a class="text-brand" href="/projects/{t.projectId}">{t.project.name}</a> / #{t.number}
+    {#if t.telegramSender}<span class="chip ms-2 bg-sky-100 text-sky-700 dark:bg-sky-950"><Icon name="send" size={12} />تلگرام · {t.telegramSender}</span>{/if}
   </div>
   <div class="grid gap-4 lg:grid-cols-[1fr_20rem]">
     <div class="min-w-0 space-y-4">
       {#if canEdit}
-        <input class="input !border-transparent !bg-transparent !px-0 h-page hover:!border-slate-300" value={t.title} onchange={(e) => patch({ title: e.target.value })} maxlength="300" />
+        <input class="input !border-transparent !bg-transparent !px-0 h-page hover:!border-zinc-300" value={t.title} onchange={(e) => patch({ title: e.target.value })} maxlength="300" />
       {:else}<h1 class="h-page">{t.title}</h1>{/if}
 
-      {#if t.blockedBy.some((b) => !b.column.isDone)}<div class="rounded-lg bg-amber-50 p-2 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">⛔ این تسک توسط تسک‌های باز دیگری مسدود شده است.</div>{/if}
+      {#if t.blockedBy.some((b) => !b.column.isDone)}<div class="rounded-lg bg-amber-50 p-2 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300"><Icon name="ban" size={16} /> این تسک توسط تسک‌های باز دیگری مسدود شده است.</div>{/if}
 
       <section class="card p-4">
         <div class="mb-2 flex items-center"><b>توضیحات</b>{#if canEdit}<button class="btn-ghost ms-auto" onclick={() => (editDesc = !editDesc)}>{editDesc ? 'انصراف' : 'ویرایش'}</button>{/if}</div>
@@ -149,20 +150,20 @@
           <textarea class="input" rows="8" bind:value={desc}></textarea>
           <button class="btn-primary mt-2" onclick={() => { patch({ description: desc }); editDesc = false; }}>ذخیره</button>
         {:else if t.description}<div class="md text-sm">{@html md(t.description)}</div>
-        {:else}<div class="text-sm text-slate-400">توضیحی ثبت نشده.</div>{/if}
+        {:else}<div class="text-sm text-zinc-400">توضیحی ثبت نشده.</div>{/if}
       </section>
 
       <section class="card p-4">
-        <div class="mb-2 flex items-center gap-2"><b>چک‌لیست</b>{#if progress !== null}<span class="text-xs text-slate-500">{num(progress)}٪</span>{/if}</div>
-        {#if progress !== null}<div class="mb-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><div class="h-full bg-emerald-500 transition-all" style="width:{progress}%"></div></div>{/if}
+        <div class="mb-2 flex items-center gap-2"><b>چک‌لیست</b>{#if progress !== null}<span class="text-xs text-zinc-500">{num(progress)}٪</span>{/if}</div>
+        {#if progress !== null}<div class="mb-2 h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/[0.06]"><div class="h-full bg-emerald-500 transition-all" style="width:{progress}%"></div></div>{/if}
         {#each t.checklist as c (c.id)}
           <div class="flex items-center gap-2 py-1 text-sm">
             <input type="checkbox" checked={c.done} disabled={!canEdit} onchange={() => checkToggle(c)} />
-            <span class={c.done ? 'text-slate-400 line-through' : ''}>{c.text}</span>
+            <span class={c.done ? 'text-zinc-400 line-through' : ''}>{c.text}</span>
             {#if canEdit}<button class="btn-ghost ms-auto !py-0" onclick={() => checkDel(c)} aria-label="حذف">×</button>{/if}
           </div>
         {/each}
-        {#if canEdit}<form onsubmit={checkAdd} class="mt-2"><input class="input" placeholder="＋ آیتم جدید (Enter)" bind:value={newCheck} /></form>{/if}
+        {#if canEdit}<form onsubmit={checkAdd} class="mt-2"><input class="input" placeholder="آیتم جدید را بنویسید و Enter بزنید…" bind:value={newCheck} /></form>{/if}
       </section>
 
       <section class="card p-4">
@@ -170,22 +171,22 @@
           {#if canAttach}<label class="btn-ghost ms-auto">＋ آپلود<input type="file" multiple hidden onchange={upload} /></label>{/if}</div>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {#each t.attachments as a (a.id)}
-            <div class="rounded-lg border border-slate-200 p-2 text-xs dark:border-slate-800">
+            <div class="rounded-lg border border-zinc-200 p-2 text-xs dark:border-white/[0.08]">
               {#if a.mime.startsWith('image/') && a.mime !== 'image/svg+xml'}<a href="/api/attachments/{a.id}" target="_blank"><img src="/api/attachments/{a.id}" alt={a.name} class="mb-1 h-24 w-full rounded object-cover" loading="lazy" /></a>{/if}
-              <a class="block truncate text-brand" href="/api/attachments/{a.id}" target="_blank" download={a.name}>📎 {a.name}</a>
-              <div class="flex justify-between text-slate-400">{num(Math.round(a.size / 1024))} KB {#if isManager || a.uploadedById === app.user.id}<button onclick={() => delFile(a)}>حذف</button>{/if}</div>
+              <a class="block truncate text-brand" href="/api/attachments/{a.id}" target="_blank" download={a.name}><Icon name="clip" size={13} class="inline" /> {a.name}</a>
+              <div class="flex justify-between text-zinc-400">{num(Math.round(a.size / 1024))} KB {#if isManager || a.uploadedById === app.user.id}<button onclick={() => delFile(a)}>حذف</button>{/if}</div>
             </div>
           {/each}
         </div>
-        {#if !t.attachments.length}<div class="text-sm text-slate-400">پیوستی نیست.</div>{/if}
+        {#if !t.attachments.length}<div class="text-sm text-zinc-400">پیوستی نیست.</div>{/if}
       </section>
 
       <section class="card p-4">
         <b>کامنت‌ها</b>
         <div class="mt-2 space-y-3">
           {#each comments as c (c.id)}
-            <div class="rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800/50">
-              <div class="mb-1 flex items-center gap-2 text-xs text-slate-500"><b>{c.author.name}</b>{fmtDateTime(c.createdAt)}{#if c.editedAt}(ویرایش‌شده){/if}
+            <div class="rounded-lg bg-zinc-50 p-3 text-sm dark:bg-white/[0.04]">
+              <div class="mb-1 flex items-center gap-2 text-xs text-zinc-500"><b>{c.author.name}</b>{fmtDateTime(c.createdAt)}{#if c.editedAt}(ویرایش‌شده){/if}
                 {#if c.authorId === app.user.id}<button class="ms-auto" onclick={() => (editingComment = { id: c.id, body: c.body })}>ویرایش</button>{/if}
                 {#if c.authorId === app.user.id || isManager}<button onclick={() => delComment(c)}>حذف</button>{/if}</div>
               {#if editingComment?.id === c.id}
@@ -206,10 +207,10 @@
       <section class="card p-4">
         <b>تاریخچه فعالیت</b>
         {#each t.activities as a}
-          <div class="border-b border-slate-100 py-1.5 text-xs text-slate-500 last:border-0 dark:border-slate-800">
+          <div class="border-b border-zinc-100 py-1.5 text-xs text-zinc-500 last:border-0 dark:border-white/[0.08]">
             <b>{a.user?.name ?? 'سیستم'}</b> {ACTIONS[a.action] ?? a.action}
-            {#if a.action === 'task.moved'}: {a.data.from} ← {a.data.to}{:else if a.action === 'task.field'}: {a.data.field}{/if}
-            <span class="ms-1 text-slate-400">{fmtDateTime(a.createdAt)}</span>
+            {#if a.action === 'task.moved'}: {a.data.from} به {a.data.to}{:else if a.action === 'task.field'}: {a.data.field}{/if}
+            <span class="ms-1 text-zinc-400">{fmtDateTime(a.createdAt)}</span>
           </div>
         {/each}
       </section>
@@ -231,7 +232,7 @@
           <label>تخمین (دقیقه)<input class="input mt-1" type="number" min="0" value={t.estimateMin ?? ''} disabled={!canEdit} onchange={(e) => patch({ estimateMin: e.target.value ? +e.target.value : null })} /></label>
           <label>تکرار<select class="input mt-1" value={t.recurrence ?? ''} disabled={!canEdit} onchange={(e) => patch({ recurrence: e.target.value || null })}><option value="">ندارد</option><option value="DAILY">روزانه</option><option value="WEEKLY">هفتگی</option><option value="MONTHLY">ماهانه</option></select></label>
         </div>
-        <div class="text-xs text-slate-500">سازنده: {t.createdBy.name} · {fmtDateTime(t.createdAt)}</div>
+        <div class="text-xs text-zinc-500">سازنده: {t.createdBy.name} · {fmtDateTime(t.createdAt)}</div>
       </div>
 
       <div class="card p-4 text-sm">
@@ -263,15 +264,15 @@
       {#if canComment && role !== 'REPORTER'}
         <div class="card p-4 text-sm">
           <div class="mb-2 font-semibold">زمان‌سنجی</div>
-          <div class="mb-2 text-slate-500">صرف‌شده: {fmtMin(t.spentMin)}{#if t.estimateMin} از {fmtMin(t.estimateMin)}{/if}</div>
-          {#if t.runningTimer}<button class="btn-danger w-full" onclick={() => timer('stop')}>■ توقف تایمر</button>{:else}<button class="btn-outline w-full" onclick={() => timer('start')}>▶ شروع تایمر</button>{/if}
+          <div class="mb-2 text-zinc-500">صرف‌شده: {fmtMin(t.spentMin)}{#if t.estimateMin} از {fmtMin(t.estimateMin)}{/if}</div>
+          {#if t.runningTimer}<button class="btn-danger w-full" onclick={() => timer('stop')}><Icon name="stop" size={14} /> توقف تایمر</button>{:else}<button class="btn-outline w-full" onclick={() => timer('start')}><Icon name="play" size={14} /> شروع تایمر</button>{/if}
           <form class="mt-2 flex gap-2" onsubmit={logTime}><input class="input" type="number" min="1" placeholder="ثبت دستی (دقیقه)" bind:value={minutes} /><button class="btn-ghost">ثبت</button></form>
         </div>
       {/if}
 
       <div class="card p-4 text-sm">
         <div class="mb-2 font-semibold">وابستگی‌ها</div>
-        {#each t.blockedBy as b}<div class="flex items-center gap-1 py-0.5">⛔ وابسته به <a class="text-brand" href="/tasks/{b.id}">#{b.number} {b.title}</a>{#if isManager}<button class="ms-auto" onclick={() => delDep(b)}>×</button>{/if}</div>{/each}
+        {#each t.blockedBy as b}<div class="flex items-center gap-1 py-0.5"><Icon name="ban" size={14} class="inline" /> وابسته به <a class="text-brand" href="/tasks/{b.id}">#{b.number} {b.title}</a>{#if isManager}<button class="ms-auto" onclick={() => delDep(b)}>×</button>{/if}</div>{/each}
         {#each t.blocks as b}<div class="py-0.5">مسدودکننده‌ی <a class="text-brand" href="/tasks/{b.id}">#{b.number} {b.title}</a></div>{/each}
         {#if isManager}
           <input class="input mt-2" placeholder="＋ وابسته به تسک… (جستجو)" bind:value={depSearch} oninput={findDep} />

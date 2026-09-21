@@ -68,10 +68,11 @@
     goto('/login');
   }
 
+  const isClient = $derived(app.user?.role === 'CLIENT');
   const nav = $derived([
-    ['/', 'داشبورد', 'dashboard'],
+    ['/', isClient ? 'درخواست‌های من' : 'داشبورد', 'dashboard'],
     ['/projects', 'پروژه‌ها', 'folder'],
-    ['/reports', 'گزارش‌ها', 'chart'],
+    ...(isClient ? [] : [['/reports', 'گزارش‌ها', 'chart'], ['/archive', 'بایگانی', 'archive']]),
     ['/notifications', 'اعلان‌ها', 'bell'],
     ['/settings', 'تنظیمات', 'sliders'],
     ...(isOwner() ? [['/admin', 'مدیریت', 'shield']] : []),
@@ -88,7 +89,7 @@
   <div class="flex min-h-screen items-center justify-center"><div class="h-9 w-9 animate-spin rounded-full border-[3px] border-brand border-t-transparent"></div></div>
 {:else if app.user}
   <div class="flex min-h-screen">
-    <aside class="dotgrid fixed inset-y-0 z-30 flex w-[17rem] shrink-0 flex-col bg-ink p-4 text-zinc-300 transition-transform md:sticky md:top-0 md:h-screen md:tranzinc-x-0 {menu ? '' : 'tranzinc-x-full md:tranzinc-x-0'}">
+    <aside class="dotgrid fixed inset-y-0 z-30 flex w-[17rem] shrink-0 flex-col bg-ink p-4 text-zinc-300 transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 {menu ? '' : 'translate-x-full md:translate-x-0'}">
       <div class="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-brand/30 to-transparent"></div>
       <a href="/" class="relative mb-7 flex items-center gap-3 px-1.5 pt-1">
         <span class="tile h-10 w-10 bg-brand text-white shadow-glow"><Icon name="tick" size={22} stroke={2.4} /></span>
@@ -106,7 +107,7 @@
         {/each}
       </nav>
 
-      <button class="btn-primary relative mt-6 w-full" onclick={() => (quick = true)}><Icon name="plus" size={16} stroke={2.4} /> تسک جدید <kbd class="ms-auto !border-white/20 !bg-white/15 !text-white/80">N</kbd></button>
+      <button class="btn-primary relative mt-6 w-full" onclick={() => (quick = true)}><Icon name="plus" size={16} stroke={2.4} /> {isClient ? 'درخواست جدید' : 'تسک جدید'} <kbd class="ms-auto !border-white/20 !bg-white/15 !text-white/80">N</kbd></button>
 
       <div class="relative mt-auto space-y-1">
         <button class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-zinc-400 transition hover:bg-white/[0.05] hover:text-zinc-100" onclick={() => (help = true)}><Icon name="command" size={16} /> میان‌بُرها <kbd class="ms-auto !border-white/10 !bg-white/5 !text-zinc-400">?</kbd></button>
@@ -124,9 +125,9 @@
       <header class="sticky top-0 z-10 flex items-center gap-3 border-b border-zinc-200/70 bg-zinc-50/80 px-4 py-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0b0c14]/80 md:px-8">
         <button class="btn-ghost !p-2.5 md:hidden" onclick={() => (menu = !menu)} aria-label="منو"><Icon name="menu" /></button>
         <div class="relative max-w-xl flex-1">
-          <Icon name="search" size={16} class="pointer-events-none absolute start-3.5 top-1/2 -tranzinc-y-1/2 text-zinc-400" />
+          <Icon name="search" size={16} class="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input bind:this={searchEl} class="input !ps-10 !py-2.5 shadow-xs" placeholder="جستجو در تسک‌ها، پروژه‌ها، کامنت‌ها و فایل‌ها…" bind:value={q} oninput={onSearch} />
-          <kbd class="absolute end-3 top-1/2 hidden -tranzinc-y-1/2 sm:block">/</kbd>
+          <kbd class="absolute end-3 top-1/2 hidden -translate-y-1/2 sm:block">/</kbd>
           {#if results}
             <div class="card pop-in absolute inset-x-0 top-full z-40 mt-2 max-h-96 overflow-auto p-1.5 text-sm shadow-lift">
               {#each results.projects as p}<a class="flex items-center gap-2.5 rounded-lg p-2.5 hover:bg-zinc-100 dark:hover:bg-white/[0.06]" href="/projects/{p.id}" onclick={() => (results = null)}><Icon name="folder" size={16} class="text-brand" />{p.name}<span class="chip ms-auto bg-zinc-100 text-zinc-500 dark:bg-white/10">پروژه</span></a>{/each}
@@ -155,5 +156,5 @@
     </div>
   {/if}
 
-  {#if app.toast}<div class="pop-in fixed bottom-6 start-1/2 z-50 flex -tranzinc-x-1/2 items-center gap-2 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white shadow-lift dark:bg-white dark:text-zinc-900"><Icon name="check" size={16} class="text-emerald-400" />{app.toast}</div>{/if}
+  {#if app.toast}<div class="pop-in fixed bottom-6 start-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white shadow-lift dark:bg-white dark:text-zinc-900"><Icon name="check" size={16} class="text-emerald-400" />{app.toast}</div>{/if}
 {/if}

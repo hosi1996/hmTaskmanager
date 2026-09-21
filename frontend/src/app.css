@@ -10,15 +10,15 @@
 
 @theme {
   --font-sans: 'Vazirmatn', system-ui, sans-serif;
-  --color-brand: #5b5bd6;
-  --color-brand-600: #4a4ac4;
-  --color-brand-50: #f0f0ff;
+  --color-brand: #4f46e5;
+  --color-brand-600: #4338ca;
+  --color-brand-50: #eef2ff;
   --color-ink: #0e0f1a;
   --color-ink-2: #171826;
   --shadow-xs: 0 1px 2px rgb(16 24 40 / 0.05);
   --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
   --shadow-lift: 0 8px 24px -8px rgb(16 24 40 / 0.16), 0 2px 6px rgb(16 24 40 / 0.06);
-  --shadow-glow: 0 6px 20px -6px rgb(91 91 214 / 0.55);
+  --shadow-glow: 0 6px 18px -6px rgb(79 70 229 / 0.6);
 }
 
 html { font-family: var(--font-sans); scroll-behavior: smooth; font-feature-settings: 'ss01'; }
@@ -29,7 +29,7 @@ body { @apply bg-zinc-50 text-zinc-800 antialiased dark:bg-[#0b0c14] dark:text-z
 @layer components {
   .card { @apply rounded-2xl border border-zinc-200/80 bg-white shadow-card dark:border-white/[0.07] dark:bg-[#12131d]; }
   .card-hover { @apply transition duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-lift; }
-  .btn-primary { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:bg-brand-600 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none; }
+  .btn-primary { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#5b54f0] to-brand px-4 py-2 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_6px_16px_-6px_rgb(79_70_229/0.7)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none; }
   .btn-ghost { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 active:scale-[0.98] disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-white/[0.06]; }
   .btn-danger { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10; }
   .btn-outline { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium text-zinc-700 shadow-xs transition hover:bg-zinc-50 active:scale-[0.98] dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-200 dark:hover:bg-white/[0.07]; }

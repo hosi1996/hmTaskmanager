@@ -72,10 +72,10 @@
         <p class="mt-1.5 text-sm text-zinc-500">برای ادامه، اطلاعات ورود خود را وارد کنید.</p>
       </div>
       <label class="block text-sm font-semibold">نام کاربری یا ایمیل
-        <div class="relative mt-2"><Icon name="users" size={16} class="pointer-events-none absolute start-3.5 top-1/2 -tranzinc-y-1/2 text-zinc-400" /><input class="input !ps-10 !py-2.5" autocomplete="username" bind:value={username} dir="ltr" required /></div></label>
+        <div class="relative mt-2"><Icon name="users" size={16} class="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-zinc-400" /><input class="input !ps-10 !py-2.5" autocomplete="username" bind:value={username} dir="ltr" required /></div></label>
       <label class="block text-sm font-semibold">رمز عبور
-        <div class="relative mt-2"><Icon name="lock" size={16} class="pointer-events-none absolute start-3.5 top-1/2 -tranzinc-y-1/2 text-zinc-400" /><input class="input !ps-10 !py-2.5" type={show ? 'text' : 'password'} autocomplete="current-password" bind:value={password} dir="ltr" required />
-          <button type="button" class="absolute end-3 top-1/2 -tranzinc-y-1/2 text-zinc-400 hover:text-zinc-700" onclick={() => (show = !show)} aria-label="نمایش رمز"><Icon name="eye" size={16} /></button></div></label>
+        <div class="relative mt-2"><Icon name="lock" size={16} class="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-zinc-400" /><input class="input !ps-10 !py-2.5" type={show ? 'text' : 'password'} autocomplete="current-password" bind:value={password} dir="ltr" required />
+          <button type="button" class="absolute end-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700" onclick={() => (show = !show)} aria-label="نمایش رمز"><Icon name="eye" size={16} /></button></div></label>
       {#if need2fa}<label class="pop-in block text-sm font-semibold">کد ۶ رقمی اپ احراز هویت
         <input class="input mt-2 !py-2.5 text-center text-lg tracking-[0.6em]" inputmode="numeric" maxlength="6" bind:value={code} dir="ltr" required /></label>{/if}
       {#if error}<div class="pop-in flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400"><Icon name="alert" size={16} class="mt-0.5" />{error}</div>{/if}

@@ -120,7 +120,12 @@ export default async function tasks(app) {
     }).partial();
     const b = schema.parse(req.body);
     const isManager = role === 'MANAGER';
-    if (!(await canEditTask(req.user, task, role))) throw httpError(403, 'اجازه ویرایش این تسک را ندارید');
+    let allowed = await canEditTask(req.user, task, role);
+    // ثبت‌کننده (مثلاً مشتری) تا وقتی تسک بسته نشده، فقط عنوان و توضیحات تسک خودش را می‌تواند اصلاح کند
+    if (!allowed && role === 'REPORTER' && task.createdById === req.user.id && !task.completedAt) {
+      allowed = Object.keys(b).every((k) => ['title', 'description'].includes(k));
+    }
+    if (!allowed) throw httpError(403, 'اجازه ویرایش این تسک را ندارید');
     if (!isManager && MANAGER_ONLY.some((k) => k in b)) throw httpError(403, 'فقط مدیر پروژه');
 
     const { assigneeIds, watcherIds, labelIds, archived, columnId, ...plain } = b;

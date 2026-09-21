@@ -2,7 +2,8 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { api } from '$lib/api.js';
-  import { notice } from '$lib/state.svelte.js';
+  import { app, notice } from '$lib/state.svelte.js';
+  import DateInput from '$lib/DateInput.svelte';
   import { ACTIONS, fmtDate, fmtDateTime, num, ROLES, SYS_ROLES, toInput } from '$lib/format.js';
   import Board from '$lib/Board.svelte';
   import ListView from '$lib/ListView.svelte';
@@ -16,8 +17,10 @@
   let tasks = $state([]);
   let categories = $state([]);
   let workload = $state([]);
-  let tab = $state('board');
+  const isClient = app.user.role === 'CLIENT';
+  let tab = $state(page.url.searchParams.get('tab') ?? (isClient ? 'list' : 'board'));
   let quick = $state(false);
+  let quickDate = $state('');
   let inviteLink = $state('');
   let newMember = $state({ q: '', found: [], role: 'REPORTER' });
   let edit = $state(null);
@@ -73,7 +76,9 @@
     tab = k;
     if (k === 'settings') edit = { name: project.name, description: project.description, status: project.status, color: project.color, icon: project.icon, type: project.type, startDate: toInput(project.startDate), deadline: toInput(project.deadline) };
   }
-  const tabs = $derived([['board', 'کانبان', 'kanban'], ['list', 'لیست', 'list'], ['calendar', 'تقویم', 'calendar'], ['overview', 'داشبورد', 'chart'], ['members', 'اعضا', 'users'], ...(isManager ? [['settings', 'تنظیمات', 'sliders']] : [])]);
+  const tabs = $derived(isClient
+    ? [['list', 'درخواست‌ها', 'list'], ['board', 'وضعیت‌ها', 'kanban'], ['calendar', 'تقویم', 'calendar'], ['overview', 'خلاصه', 'chart']]
+    : [['board', 'کانبان', 'kanban'], ['list', 'لیست', 'list'], ['calendar', 'تقویم', 'calendar'], ['overview', 'داشبورد', 'chart'], ['members', 'اعضا', 'users'], ...(isManager ? [['settings', 'تنظیمات', 'sliders']] : [])]);
 </script>
 
 <svelte:head><title>{project?.name ?? 'پروژه'}</title></svelte:head>
@@ -94,7 +99,7 @@
         </div>
       </div>
       <div class="hidden -space-x-2 -space-x-reverse sm:flex">{#each project.members.slice(0, 5) as m}<Avatar name={m.user.name} size={32} ring />{/each}</div>
-      {#if canCreate}<button class="btn-primary" onclick={() => (quick = true)}><Icon name="plus" size={16} /> تسک جدید</button>{/if}
+      {#if canCreate}<button class="btn-primary" onclick={() => (quick = true)}><Icon name="plus" size={16} stroke={2.4} /> {isClient ? 'درخواست جدید' : 'تسک جدید'}</button>{/if}
     </div>
     <div class="mt-4 flex items-center gap-3 text-xs text-zinc-500"><div class="h-2 flex-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/[0.06]"><div class="h-full rounded-full transition-all duration-700" style="width:{data.stats.total ? (data.stats.closed / data.stats.total) * 100 : 0}%;background:linear-gradient(90deg,{project.color},{project.color}aa)"></div></div>{num(data.stats.closed)}/{num(data.stats.total)}</div>
   </div>
@@ -110,7 +115,7 @@
   {:else if tab === 'list'}
     <ListView {project} {categories} members={project.members} canManage={isManager} />
   {:else if tab === 'calendar'}
-    <Calendar {tasks} />
+    <Calendar {tasks} canSchedule={isManager} {canCreate} oncreate={(d) => { quickDate = d; quick = true; }} reload={reload} />
   {:else if tab === 'overview'}
     <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
       {#each [['کل', data.stats.total, ''], ['باز', data.stats.open, ''], ['انجام‌شده', data.stats.closed, 'text-emerald-600'], ['عقب‌افتاده', data.stats.overdue, 'text-red-600']] as [l, v, c]}
@@ -161,12 +166,12 @@
         <select class="input" bind:value={edit.status}><option value="ACTIVE">فعال</option><option value="PAUSED">متوقف</option><option value="COMPLETED">تکمیل‌شده</option><option value="ARCHIVED">بایگانی</option></select>
         <input class="input" placeholder="نوع/دسته پروژه" bind:value={edit.type} />
         <div class="flex gap-2"><input class="input !w-16" bind:value={edit.icon} maxlength="4" /><input class="h-9 w-12" type="color" bind:value={edit.color} /></div>
-        <label class="text-xs">شروع<input class="input" type="date" bind:value={edit.startDate} /></label>
-        <label class="text-xs">ددلاین<input class="input" type="date" bind:value={edit.deadline} /></label>
+        <div class="text-xs font-semibold">شروع<div class="mt-1 font-normal"><DateInput bind:value={edit.startDate} placeholder="انتخاب تاریخ" /></div></div>
+        <div class="text-xs font-semibold">ددلاین<div class="mt-1 font-normal"><DateInput bind:value={edit.deadline} placeholder="انتخاب تاریخ" /></div></div>
         <textarea class="input sm:col-span-2" rows="4" bind:value={edit.description}></textarea>
         <div class="flex gap-2 sm:col-span-2"><button class="btn-primary">ذخیره</button><button type="button" class="btn-ghost" onclick={saveTemplate}>ذخیره به‌عنوان قالب</button><button type="button" class="btn-danger ms-auto" onclick={remove}>حذف پروژه</button></div>
       </form>
     {/if}
   {/if}
-  {#if quick}<QuickTask projectId={id} onclose={() => { quick = false; reload(); }} />{/if}
+  {#if quick}<QuickTask projectId={id} dueDate={quickDate} onclose={() => { quick = false; quickDate = ''; reload(); }} />{/if}
 {/if}

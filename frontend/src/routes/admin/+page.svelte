@@ -52,7 +52,7 @@
 </script>
 
 <svelte:head><title>مدیریت</title></svelte:head>
-<h1 class="mb-4 h-page">مدیریت سیستم</h1>
+<div class="mb-6 flex flex-wrap items-center gap-3"><h1 class="h-page !text-[26px]">مدیریت سیستم</h1><a href="/archive" class="btn-outline ms-auto"><Icon name="archive" size={16} /> بایگانی و حذف‌شده‌ها</a></div>
 <div class="grid gap-4 lg:grid-cols-2">
   <section class="card p-4 text-sm lg:col-span-2">
     <b>گروه‌های تلگرام متصل</b>

@@ -56,10 +56,10 @@
   }
 </script>
 
-<div class="flex gap-4 overflow-x-auto pb-4">
+<div class="flex items-start gap-4 overflow-x-auto pb-4">
   {#each project.columns as col, ci (col.id)}
     {@const color = PALETTE[ci % PALETTE.length]}
-    <div class="flex w-80 shrink-0 flex-col rounded-2xl bg-zinc-100/70 p-2.5 transition dark:bg-[#12131d] {overCol === col.id ? 'ring-2 ring-brand ring-offset-2 ring-offset-transparent' : ''}"
+    <div class="flex min-w-[16.5rem] flex-1 basis-0 flex-col rounded-2xl bg-zinc-100/80 p-2.5 transition dark:bg-white/[0.03] {overCol === col.id ? 'ring-2 ring-brand ring-offset-2 ring-offset-transparent' : ''}"
       role="list" ondragover={(e) => { if (canMove) { e.preventDefault(); overCol = col.id; } }} ondragleave={() => (overCol = null)} ondrop={(e) => { e.preventDefault(); drop(col); }}>
       <div class="mb-3 flex items-center gap-2 px-1.5 text-sm font-bold">
         <span class="h-3 w-3 rounded-full" style="background:{color};box-shadow:0 0 0 4px {color}30"></span>

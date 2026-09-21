@@ -30,6 +30,7 @@ export const ACTIONS = {
   'task.field': 'یک فیلد را تغییر داد',
   'task.attached': 'فایل پیوست کرد',
   'task.deleted': 'تسک را حذف کرد',
+  'task.restored': 'تسک را بازیابی کرد',
   'project.created': 'پروژه را ساخت',
   'project.updated': 'پروژه را ویرایش کرد',
 };

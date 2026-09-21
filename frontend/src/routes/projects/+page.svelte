@@ -11,14 +11,14 @@
   let status = $state('');
   let search = $state('');
   let show = $state(false);
-  let f = $state({ name: '', description: '', color: '#5b5bd6', icon: 'folder', templateId: '' });
+  let f = $state({ name: '', description: '', color: '#4f46e5', icon: 'folder', templateId: '' });
   const STATUS = {
     ACTIVE: ['فعال', 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'],
     PAUSED: ['متوقف', 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'],
     COMPLETED: ['تکمیل‌شده', 'bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300'],
     ARCHIVED: ['بایگانی', 'bg-zinc-100 text-zinc-500 dark:bg-white/10'],
   };
-  const COLORS = ['#5b5bd6', '#7c5cd6', '#c2569b', '#d4802a', '#2f9e73', '#2b8fb3', '#c8503c', '#3f74d6'];
+  const COLORS = ['#4f46e5', '#7c5cd6', '#c2569b', '#d4802a', '#2f9e73', '#2b8fb3', '#c8503c', '#3f74d6'];
   const ICONS = ['folder', 'rocket', 'target', 'bulb', 'wrench', 'phone', 'globe', 'cart', 'chart', 'palette', 'briefcase', 'layers'];
 
   async function load() { projects = (await api('/projects' + (status ? `?status=${status}` : ''))).projects; }
@@ -40,7 +40,7 @@
 <div class="mb-8 flex flex-wrap items-center gap-3">
   <div class="me-auto"><h1 class="h-page !text-[26px]">پروژه‌ها</h1><p class="mt-1 text-sm text-zinc-500">همه‌ی پروژه‌هایی که به آن‌ها دسترسی دارید</p></div>
   <div class="relative w-full sm:w-60">
-    <Icon name="search" size={15} class="pointer-events-none absolute start-3 top-1/2 -tranzinc-y-1/2 text-zinc-400" />
+    <Icon name="search" size={15} class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-zinc-400" />
     <input class="input !ps-9" placeholder="جستجوی پروژه…" bind:value={search} />
   </div>
   <div class="seg">

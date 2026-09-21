@@ -2,12 +2,13 @@
   import Icon from './Icon.svelte';
   import EmptyState from './EmptyState.svelte';
   import { api, qs } from './api.js';
-  import { notice } from './state.svelte.js';
+  import { app, notice } from './state.svelte.js';
   import { PRIORITY } from './format.js';
   import TaskRow from './TaskRow.svelte';
 
   let { project, categories, members, canManage } = $props();
-  let f = $state({ status: 'open', priority: '', categoryId: '', assignee: '', q: '', sort: 'due' });
+  const isClient = app.user.role === 'CLIENT';
+  let f = $state({ status: isClient ? '' : 'open', priority: '', categoryId: '', assignee: '', q: '', sort: 'due' });
   let tasks = $state(null);
   let views = $state([]);
   let sel = $state([]);
@@ -49,9 +50,9 @@
   <select class="input !w-auto" bind:value={f.status}><option value="">همه</option><option value="open">باز</option><option value="done">انجام‌شده</option></select>
   <select class="input !w-auto" bind:value={f.priority}><option value="">همه‌ی اولویت‌ها</option>{#each Object.entries(PRIORITY) as [k, v]}<option value={k}>{v.label}</option>{/each}</select>
   <select class="input !w-auto" bind:value={f.categoryId}><option value="">همه‌ی گروه‌ها</option>{#each categories as c}<option value={c.id}>{c.name}</option>{/each}</select>
-  <select class="input !w-auto" bind:value={f.assignee}><option value="">همه‌ی اساین‌شده‌ها</option><option value="me">من</option>{#each members as m}<option value={m.user.id}>{m.user.name}</option>{/each}</select>
+  {#if !isClient}<select class="input !w-auto" bind:value={f.assignee}><option value="">همه‌ی اساین‌شده‌ها</option><option value="me">من</option>{#each members as m}<option value={m.user.id}>{m.user.name}</option>{/each}</select>
   <select class="input !w-auto" bind:value={f.sort}><option value="due">ددلاین</option><option value="priority">اولویت</option><option value="created">جدیدترین</option></select>
-  <button class="btn-ghost" onclick={saveView}><Icon name="bookmark" size={15} /> ذخیره فیلتر</button>
+  <button class="btn-ghost" onclick={saveView}><Icon name="bookmark" size={15} /> ذخیره فیلتر</button>{/if}
   {#each views as v}
     <span class="chip bg-indigo-50 text-brand dark:bg-indigo-950"><button onclick={() => (f = { ...f, ...v.filters })}>{v.name}</button><button class="opacity-60" onclick={() => delView(v)} aria-label="حذف">×</button></span>
   {/each}

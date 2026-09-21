@@ -70,9 +70,18 @@ async function start() {
     const text = m.text ?? m.caption ?? '';
     const from = nameOf(m.from);
 
-    // گروه ناشناخته را هم ثبت کن (اگر بات قبل از دیپلوی اضافه شده بود)
-    const isCmd = new RegExp(`^/${command}(@\\w+)?(\\s|$)`, 'i').test(text) && m.reply_to_message;
-    if (!isCmd) {
+    // دستور را از entity تلگرام می‌خوانیم (مستقل از حروف بزرگ/کوچک و @نام_بات)
+    const ent = m.entities?.find((e) => e.type === 'bot_command' && e.offset === 0);
+    const [cmd, target] = ent ? text.slice(1, ent.length).split('@') : [null, null];
+    const forUs = !target || target.toLowerCase() === ctx.me.username.toLowerCase();
+    const isTaskCmd = !!cmd && forUs && [command.toLowerCase(), 'task'].includes(cmd.toLowerCase());
+    if (cmd) log({ msg: 'command received', cmd, forUs, hasReply: !!m.reply_to_message, isTaskCmd });
+
+    if (isTaskCmd && !m.reply_to_message) {
+      return ctx.reply(`برای ساخت تسک، روی پیام موردنظر ریپلای کنید و /${command} بفرستید.`, { reply_parameters: { message_id: m.message_id } });
+    }
+    if (!isTaskCmd) {
+      // گروه ناشناخته را هم ثبت کن (اگر بات قبل از دیپلوی اضافه شده بود)
       await api('/chat', { chatId: ctx.chat.id, title: ctx.chat.title, type: ctx.chat.type }).catch(() => {});
       if (text) {
         await api('/message', { chatId: ctx.chat.id, messageId: m.message_id, fromId: m.from?.id, fromName: from, text, replyToId: m.reply_to_message?.message_id }).catch(() => {});

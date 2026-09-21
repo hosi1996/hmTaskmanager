@@ -29,12 +29,14 @@
   const progress = $derived(t?.checklist.length ? Math.round((t.checklist.filter((c) => c.done).length / t.checklist.length) * 100) : null);
 
   async function load() {
-    t = (await api('/tasks/' + id)).task;
-    const p = await api('/projects/' + t.projectId);
+    // همه‌چیز اول گرفته می‌شود و بعد یک‌جا ست می‌شود تا صفحه هیچ‌وقت با داده‌ی ناقص رندر نشود
+    const task = (await api('/tasks/' + id)).task;
+    const [p, cm] = await Promise.all([api('/projects/' + task.projectId), api(`/tasks/${id}/comments`)]);
     project = p.project;
     role = p.myRole;
-    comments = (await api(`/tasks/${id}/comments`)).comments;
-    desc = t.description;
+    comments = cm.comments;
+    desc = task.description;
+    t = task;
   }
   $effect(() => {
     load().catch((e) => { notice(e.message); goto('/projects'); });
@@ -130,7 +132,7 @@
 
 <svelte:head><title>{t ? `#${t.number} ${t.title}` : 'تسک'}</title></svelte:head>
 
-{#if !t}
+{#if !t || !project}
   <div class="skeleton h-10 w-96 max-w-full"></div><div class="skeleton mt-4 h-64"></div>
 {:else}
   <div class="mb-3 text-sm text-zinc-500"><a class="text-brand" href="/projects/{t.projectId}">{t.project.name}</a> / #{t.number}

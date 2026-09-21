@@ -8,6 +8,8 @@
   import ListView from '$lib/ListView.svelte';
   import Calendar from '$lib/Calendar.svelte';
   import QuickTask from '$lib/QuickTask.svelte';
+  import Icon from '$lib/Icon.svelte';
+  import Avatar from '$lib/Avatar.svelte';
 
   const id = page.params.id;
   let data = $state(null);
@@ -71,7 +73,7 @@
     tab = k;
     if (k === 'settings') edit = { name: project.name, description: project.description, status: project.status, color: project.color, icon: project.icon, type: project.type, startDate: toInput(project.startDate), deadline: toInput(project.deadline) };
   }
-  const tabs = $derived([['board', 'کانبان'], ['list', 'لیست'], ['calendar', 'تقویم'], ['overview', 'داشبورد'], ['members', 'اعضا'], ...(isManager ? [['settings', 'تنظیمات']] : [])]);
+  const tabs = $derived([['board', 'کانبان', 'kanban'], ['list', 'لیست', 'list'], ['calendar', 'تقویم', 'calendar'], ['overview', 'داشبورد', 'chart'], ['members', 'اعضا', 'users'], ...(isManager ? [['settings', 'تنظیمات', 'sliders']] : [])]);
 </script>
 
 <svelte:head><title>{project?.name ?? 'پروژه'}</title></svelte:head>
@@ -79,20 +81,32 @@
 {#if !data}
   <div class="skeleton h-10 w-64"></div><div class="skeleton mt-4 h-64"></div>
 {:else}
-  <div class="mb-4 flex flex-wrap items-center gap-3">
-    <h1 class="text-xl font-bold" style="color:{project.color}">{project.icon} {project.name}</h1>
-    {#if project.telegram}<span class="chip bg-sky-100 text-sky-700 dark:bg-sky-950">تلگرام: {project.telegram.title}</span>{/if}
-    <div class="ms-auto flex gap-2">{#if canCreate}<button class="btn-primary" onclick={() => (quick = true)}>＋ تسک</button>{/if}</div>
+  <div class="card relative mb-5 overflow-hidden p-5">
+    <div class="absolute inset-x-0 top-0 h-1.5" style="background:linear-gradient(90deg,{project.color},{project.color}55)"></div>
+    <div class="flex flex-wrap items-center gap-4">
+      <span class="flex h-14 w-14 items-center justify-center rounded-2xl text-3xl" style="background:{project.color}1f">{project.icon}</span>
+      <div class="min-w-0 flex-1">
+        <h1 class="h-page truncate">{project.name}</h1>
+        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span class="chip bg-slate-100 dark:bg-slate-800">{ROLES[role]}</span>
+          {#if project.deadline}<span class="inline-flex items-center gap-1"><Icon name="flag" size={12} />{fmtDate(project.deadline)}</span>{/if}
+          {#if project.telegram}<span class="chip bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"><Icon name="send" size={12} />{project.telegram.title}</span>{/if}
+        </div>
+      </div>
+      <div class="hidden -space-x-2 -space-x-reverse sm:flex">{#each project.members.slice(0, 5) as m}<Avatar name={m.user.name} size={32} ring />{/each}</div>
+      {#if canCreate}<button class="btn-primary" onclick={() => (quick = true)}><Icon name="plus" size={16} /> تسک جدید</button>{/if}
+    </div>
+    <div class="mt-4 flex items-center gap-3 text-xs text-slate-500"><div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><div class="h-full rounded-full transition-all duration-700" style="width:{data.stats.total ? (data.stats.closed / data.stats.total) * 100 : 0}%;background:linear-gradient(90deg,{project.color},{project.color}aa)"></div></div>{num(data.stats.closed)}/{num(data.stats.total)}</div>
   </div>
 
-  <div class="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
-    {#each tabs as [k, l]}
-      <button class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm {tab === k ? 'border-brand font-semibold text-brand' : 'border-transparent text-slate-500'}" onclick={() => openTab(k)}>{l}</button>
+  <div class="mb-5 flex gap-1 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-soft dark:bg-slate-900">
+    {#each tabs as [k, l, ic]}
+      <button class="flex items-center gap-1.5 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition {tab === k ? 'bg-gradient-to-l from-brand to-brand-2 text-white shadow' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}" onclick={() => openTab(k)}><Icon name={ic} size={15} />{l}</button>
     {/each}
   </div>
 
   {#if tab === 'board'}
-    <Board {project} {tasks} canManage={isManager} canMove={isManager} {reload} />
+    <Board {project} {tasks} canManage={isManager} canMove={isManager} {canCreate} {reload} />
   {:else if tab === 'list'}
     <ListView {project} {categories} members={project.members} canManage={isManager} />
   {:else if tab === 'calendar'}

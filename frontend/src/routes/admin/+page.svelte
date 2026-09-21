@@ -51,7 +51,7 @@
 </script>
 
 <svelte:head><title>مدیریت</title></svelte:head>
-<h1 class="mb-4 text-xl font-bold">مدیریت سیستم</h1>
+<h1 class="mb-4 h-page">مدیریت سیستم</h1>
 <div class="grid gap-4 lg:grid-cols-2">
   <section class="card p-4 text-sm lg:col-span-2">
     <b>گروه‌های تلگرام متصل</b>

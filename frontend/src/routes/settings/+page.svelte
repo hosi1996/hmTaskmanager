@@ -6,7 +6,7 @@
   const EVENTS = { assigned: 'اساین‌شدن', comment: 'کامنت جدید', mention: 'منشن', deadline: 'نزدیک‌شدن ددلاین', status: 'تغییر وضعیت', project_added: 'اضافه‌شدن به پروژه', task_created: 'تسک جدید' };
   let sessions = $state([]);
   let pw = $state({ current: '', next: '' });
-  let prefs = $state(structuredClone(app.user.notifyPrefs ?? {}));
+  let prefs = $state(JSON.parse(JSON.stringify($state.snapshot(app.user.notifyPrefs) ?? {})));
   let tg = $state('');
   let twofa = $state(null);
   let code = $state('');
@@ -40,7 +40,7 @@
 </script>
 
 <svelte:head><title>تنظیمات</title></svelte:head>
-<h1 class="mb-4 text-xl font-bold">تنظیمات</h1>
+<h1 class="mb-4 h-page">تنظیمات</h1>
 <div class="grid gap-4 lg:grid-cols-2">
   <section class="card space-y-3 p-4 text-sm">
     <b>اعلان‌ها</b>
@@ -79,7 +79,7 @@
       <div class="rounded bg-slate-100 p-2 text-center font-mono dark:bg-slate-800" dir="ltr">{twofa.secret}</div>
       <input class="input" placeholder="کد ۶ رقمی" bind:value={code} dir="ltr" inputmode="numeric" />
       <button class="btn-primary" onclick={enable2fa}>فعال‌سازی</button>
-    {:else}<button class="btn-ghost border border-slate-200 dark:border-slate-700" onclick={setup2fa}>راه‌اندازی</button>{/if}
+    {:else}<button class="btn-outline" onclick={setup2fa}>راه‌اندازی</button>{/if}
   </section>
 
   <section class="card p-4 text-sm">

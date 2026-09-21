@@ -17,7 +17,7 @@
 </script>
 
 <svelte:head><title>گزارش‌ها</title></svelte:head>
-<div class="mb-4 flex items-center"><h1 class="text-xl font-bold">گزارش‌ها</h1><a class="btn-primary ms-auto" href="/api/reports/export.csv" download>⬇ خروجی CSV (Excel)</a></div>
+<div class="mb-4 flex items-center"><h1 class="h-page">گزارش‌ها</h1><a class="btn-primary ms-auto" href="/api/reports/export.csv" download>⬇ خروجی CSV (Excel)</a></div>
 
 {#if !ov}<div class="skeleton h-40"></div>{:else}
   <div class="card mb-4 overflow-x-auto">

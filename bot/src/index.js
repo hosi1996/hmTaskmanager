@@ -113,5 +113,10 @@ if (!TOKEN) {
   log({ level: 'warn', msg: 'TELEGRAM_BOT_TOKEN تنظیم نشده؛ بات غیرفعال است' });
   setInterval(() => {}, 1 << 30); // کانتینر بالا بماند تا restart-loop نشود
 } else {
-  await start();
+  try {
+    await start();
+  } catch (e) {
+    log({ level: 'error', msg: 'بات راه‌اندازی نشد؛ توکن TELEGRAM_BOT_TOKEN را در .env بررسی کنید (نمونه: 123456:ABC-DEF...)', err: e.description ?? e.message });
+    setInterval(() => {}, 1 << 30); // restart-loop نشود
+  }
 }

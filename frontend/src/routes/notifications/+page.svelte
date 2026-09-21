@@ -21,7 +21,7 @@
 </script>
 
 <svelte:head><title>اعلان‌ها</title></svelte:head>
-<div class="mb-4 flex items-center"><h1 class="text-xl font-bold">اعلان‌ها</h1><button class="btn-ghost ms-auto" onclick={readAll}>علامت‌گذاری همه به‌عنوان خوانده‌شده</button></div>
+<div class="mb-4 flex items-center"><h1 class="h-page">اعلان‌ها</h1><button class="btn-ghost ms-auto" onclick={readAll}>علامت‌گذاری همه به‌عنوان خوانده‌شده</button></div>
 <div class="card overflow-hidden">
   {#if !items}{#each Array(4) as _}<div class="skeleton m-3 h-10"></div>{/each}
   {:else if !items.length}<div class="p-10 text-center text-slate-400"><div class="text-4xl">🔔</div>اعلانی ندارید.</div>

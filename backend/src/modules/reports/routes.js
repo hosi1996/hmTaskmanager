@@ -52,6 +52,39 @@ export default async function reports(app) {
     return { members: Object.values(m).map(({ totalMs, ...s }) => ({ ...s, avgHours: s.done ? Math.round(totalMs / s.done / 36e5) : 0 })) };
   });
 
+  // روند ۱۴ روز اخیر: ساخته‌شده / انجام‌شده
+  app.get('/reports/trend', async (req) => {
+    const tw = await visibleTasksWhere(req.user);
+    const since = new Date(Date.now() - 14 * 864e5);
+    since.setHours(0, 0, 0, 0);
+    const tasks = await prisma.task.findMany({
+      where: { AND: [tw, { OR: [{ createdAt: { gte: since } }, { completedAt: { gte: since } }] }] },
+      select: { createdAt: true, completedAt: true },
+    });
+    const days = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(since.getTime() + i * 864e5);
+      days.push({ date: d.toISOString().slice(0, 10), created: 0, done: 0 });
+    }
+    const idx = (d) => Math.floor((new Date(d).setHours(0, 0, 0, 0) - since.getTime()) / 864e5);
+    for (const t of tasks) {
+      const a = idx(t.createdAt);
+      if (days[a]) days[a].created++;
+      if (t.completedAt) { const b = idx(t.completedAt); if (days[b]) days[b].done++; }
+    }
+    return { days };
+  });
+
+  // فید فعالیت‌های اخیر روی پروژه‌های قابل‌مشاهده
+  app.get('/activity', async (req) => {
+    const tw = await visibleTasksWhere(req.user);
+    const rows = await prisma.activityLog.findMany({
+      where: { task: tw }, orderBy: { createdAt: 'desc' }, take: 12,
+      include: { user: { select: { name: true } }, task: { select: { id: true, number: true, title: true } } },
+    });
+    return { activity: rows };
+  });
+
   // بار کاری کل (کادر داخلی)
   app.get('/reports/workload', async (req) => {
     if (!isInternal(req.user)) throw httpError(403, 'دسترسی کافی ندارید');

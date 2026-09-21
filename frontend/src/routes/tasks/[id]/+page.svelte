@@ -138,8 +138,8 @@
   <div class="grid gap-4 lg:grid-cols-[1fr_20rem]">
     <div class="min-w-0 space-y-4">
       {#if canEdit}
-        <input class="input !border-transparent !bg-transparent !px-0 text-xl font-bold hover:!border-slate-300" value={t.title} onchange={(e) => patch({ title: e.target.value })} maxlength="300" />
-      {:else}<h1 class="text-xl font-bold">{t.title}</h1>{/if}
+        <input class="input !border-transparent !bg-transparent !px-0 h-page hover:!border-slate-300" value={t.title} onchange={(e) => patch({ title: e.target.value })} maxlength="300" />
+      {:else}<h1 class="h-page">{t.title}</h1>{/if}
 
       {#if t.blockedBy.some((b) => !b.column.isDone)}<div class="rounded-lg bg-amber-50 p-2 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">⛔ این تسک توسط تسک‌های باز دیگری مسدود شده است.</div>{/if}
 
@@ -264,7 +264,7 @@
         <div class="card p-4 text-sm">
           <div class="mb-2 font-semibold">زمان‌سنجی</div>
           <div class="mb-2 text-slate-500">صرف‌شده: {fmtMin(t.spentMin)}{#if t.estimateMin} از {fmtMin(t.estimateMin)}{/if}</div>
-          {#if t.runningTimer}<button class="btn-danger w-full" onclick={() => timer('stop')}>■ توقف تایمر</button>{:else}<button class="btn-ghost w-full border border-slate-200 dark:border-slate-700" onclick={() => timer('start')}>▶ شروع تایمر</button>{/if}
+          {#if t.runningTimer}<button class="btn-danger w-full" onclick={() => timer('stop')}>■ توقف تایمر</button>{:else}<button class="btn-outline w-full" onclick={() => timer('start')}>▶ شروع تایمر</button>{/if}
           <form class="mt-2 flex gap-2" onsubmit={logTime}><input class="input" type="number" min="1" placeholder="ثبت دستی (دقیقه)" bind:value={minutes} /><button class="btn-ghost">ثبت</button></form>
         </div>
       {/if}
@@ -281,7 +281,7 @@
 
       {#if isManager}
         <div class="flex gap-2">
-          <button class="btn-ghost flex-1 border border-slate-200 dark:border-slate-700" onclick={() => patch({ archived: !t.archivedAt })}>{t.archivedAt ? 'خروج از بایگانی' : 'بایگانی'}</button>
+          <button class="btn-outline flex-1" onclick={() => patch({ archived: !t.archivedAt })}>{t.archivedAt ? 'خروج از بایگانی' : 'بایگانی'}</button>
           <button class="btn-danger" onclick={remove}>حذف</button>
         </div>
       {/if}

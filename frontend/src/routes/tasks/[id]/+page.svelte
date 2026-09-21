@@ -168,7 +168,7 @@
 
       <section class="card p-4">
         <div class="mb-2 flex items-center"><b>پیوست‌ها</b>
-          {#if canAttach}<label class="btn-ghost ms-auto">＋ آپلود<input type="file" multiple hidden onchange={upload} /></label>{/if}</div>
+          {#if canAttach}<label class="btn-ghost ms-auto">آپلود<input type="file" multiple hidden onchange={upload} /></label>{/if}</div>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {#each t.attachments as a (a.id)}
             <div class="rounded-lg border border-zinc-200 p-2 text-xs dark:border-white/[0.08]">
@@ -258,7 +258,7 @@
             <button class="chip border" disabled={!canEdit} style="border-color:{l.color};{on ? `background:${l.color};color:#fff` : `color:${l.color}`}" onclick={() => patch({ labelIds: toggleId(t.labels.map((x) => x.id), l.id) })}>{l.name}</button>
           {/each}
         </div>
-        {#if canEdit}<form class="mt-2" onsubmit={addLabel}><input class="input" placeholder="＋ برچسب جدید" bind:value={newLabel} /></form>{/if}
+        {#if canEdit}<form class="mt-2" onsubmit={addLabel}><input class="input" placeholder="برچسب جدید" bind:value={newLabel} /></form>{/if}
       </div>
 
       {#if canComment && role !== 'REPORTER'}
@@ -275,7 +275,7 @@
         {#each t.blockedBy as b}<div class="flex items-center gap-1 py-0.5"><Icon name="ban" size={14} class="inline" /> وابسته به <a class="text-brand" href="/tasks/{b.id}">#{b.number} {b.title}</a>{#if isManager}<button class="ms-auto" onclick={() => delDep(b)}>×</button>{/if}</div>{/each}
         {#each t.blocks as b}<div class="py-0.5">مسدودکننده‌ی <a class="text-brand" href="/tasks/{b.id}">#{b.number} {b.title}</a></div>{/each}
         {#if isManager}
-          <input class="input mt-2" placeholder="＋ وابسته به تسک… (جستجو)" bind:value={depSearch} oninput={findDep} />
+          <input class="input mt-2" placeholder="وابسته به تسک… (جستجو)" bind:value={depSearch} oninput={findDep} />
           {#each depResults as r}<button class="btn-ghost w-full justify-start" onclick={() => addDep(r)}>#{r.number} {r.title}</button>{/each}
         {/if}
       </div>

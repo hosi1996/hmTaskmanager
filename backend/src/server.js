@@ -18,6 +18,8 @@ import telegram from './modules/telegram/routes.js';
 import reports from './modules/reports/routes.js';
 import search from './modules/search/routes.js';
 import archive from './modules/archive/routes.js';
+import monitoring from './modules/monitoring/routes.js';
+import { startMonitorScheduler } from './modules/monitoring/scheduler.js';
 
 const app = Fastify({ logger: { level: config.logLevel }, trustProxy: true, bodyLimit: 1024 * 1024 });
 
@@ -79,9 +81,11 @@ await app.register(notifications, { prefix: '/api' });
 await app.register(reports, { prefix: '/api' });
 await app.register(search, { prefix: '/api' });
 await app.register(archive, { prefix: '/api' });
+await app.register(monitoring, { prefix: '/api' });
 await app.register(telegram);
 
 startScheduler(app.log);
+startMonitorScheduler(app.log);
 
 const close = async () => {
   await app.close();

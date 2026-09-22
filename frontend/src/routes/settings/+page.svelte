@@ -4,7 +4,7 @@
   import { app, notice } from '$lib/state.svelte.js';
   import { fmtDateTime } from '$lib/format.js';
 
-  const EVENTS = { assigned: 'اساین‌شدن', comment: 'کامنت جدید', mention: 'منشن', deadline: 'نزدیک‌شدن ددلاین', status: 'تغییر وضعیت', project_added: 'اضافه‌شدن به پروژه', task_created: 'تسک جدید' };
+  const EVENTS = { assigned: 'اساین‌شدن', comment: 'کامنت جدید', mention: 'منشن', deadline: 'نزدیک‌شدن ددلاین', status: 'تغییر وضعیت', project_added: 'اضافه‌شدن به پروژه', task_created: 'تسک جدید', monitor: 'مشکل در مانیتورینگ دامنه' };
   let sessions = $state([]);
   let pw = $state({ current: '', next: '' });
   let prefs = $state(JSON.parse(JSON.stringify($state.snapshot(app.user.notifyPrefs) ?? {})));

@@ -11,6 +11,7 @@
   import QuickTask from '$lib/QuickTask.svelte';
   import Icon from '$lib/Icon.svelte';
   import Avatar from '$lib/Avatar.svelte';
+  import Monitor from '$lib/Monitor.svelte';
 
   const id = page.params.id;
   let data = $state(null);
@@ -78,7 +79,7 @@
   }
   const tabs = $derived(isClient
     ? [['list', 'درخواست‌ها', 'list'], ['board', 'وضعیت‌ها', 'kanban'], ['calendar', 'تقویم', 'calendar'], ['overview', 'خلاصه', 'chart']]
-    : [['board', 'کانبان', 'kanban'], ['list', 'لیست', 'list'], ['calendar', 'تقویم', 'calendar'], ['overview', 'داشبورد', 'chart'], ['members', 'اعضا', 'users'], ...(isManager ? [['settings', 'تنظیمات', 'sliders']] : [])]);
+    : [['board', 'کانبان', 'kanban'], ['list', 'لیست', 'list'], ['calendar', 'تقویم', 'calendar'], ['overview', 'داشبورد', 'chart'], ['members', 'اعضا', 'users'], ...(isManager ? [['monitoring', 'مانیتورینگ', 'activity'], ['settings', 'تنظیمات', 'sliders']] : [])]);
 </script>
 
 <svelte:head><title>{project?.name ?? 'پروژه'}</title></svelte:head>
@@ -159,6 +160,8 @@
         {#if inviteLink}<input class="input" dir="ltr" readonly value={inviteLink} onclick={(e) => e.target.select()} />{/if}
       </div>
     {/if}
+  {:else if tab === 'monitoring'}
+    <Monitor projectId={id} />
   {:else if tab === 'settings'}
     {#if edit}
       <form class="card grid max-w-2xl gap-3 p-4 sm:grid-cols-2" onsubmit={saveEdit}>

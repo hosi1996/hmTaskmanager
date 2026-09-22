@@ -14,6 +14,8 @@
   let created = $state('');
   let logs = $state(null);
   let newCat = $state('');
+  let monitorSettings = $state({ iranUrl: '', iranTokenSet: false });
+  let iranToken = $state('');
 
   $effect(() => {
     if (app.user.role !== 'OWNER') return void goto('/');
@@ -25,6 +27,13 @@
     projects = (await api('/projects')).projects;
     settings = await api('/settings');
     categories = (await api('/categories')).categories;
+    monitorSettings = await api('/monitor-settings');
+  }
+  async function saveMonitorSettings() {
+    await api('/monitor-settings', { method: 'PATCH', body: { iranUrl: monitorSettings.iranUrl, iranToken: iranToken || undefined } });
+    iranToken = '';
+    notice('ذخیره شد');
+    loadAll();
   }
   async function addUser(e) {
     e.preventDefault();
@@ -84,6 +93,14 @@
     <b>گروه‌های تسک</b>
     {#each categories as c}<input class="input" value={c.name} onchange={(e) => renameCat(c, e.target.value)} />{/each}
     <form class="flex gap-2" onsubmit={addCat}><input class="input" placeholder="گروه جدید…" bind:value={newCat} /><button class="btn-ghost">افزودن</button></form>
+  </section>
+
+  <section class="card space-y-2 p-4 text-sm">
+    <b>مانیتورینگ دامنه — چک‌کننده‌ی ایران</b>
+    <p class="text-xs text-zinc-500">اختیاری. آدرس <code dir="ltr">check.php</code> که روی هاست ایران آپلود کرده‌اید و توکن داخل آن را وارد کنید تا گزینه‌ی «محل چک: ایران» برای دامنه‌ها فعال شود.</p>
+    <label class="block">آدرس چک‌کننده<input class="input mt-1" dir="ltr" placeholder="https://example.ir/check.php" bind:value={monitorSettings.iranUrl} /></label>
+    <label class="block">توکن{#if monitorSettings.iranTokenSet}<span class="text-xs text-emerald-600"> (تنظیم شده — برای تغییر بنویسید)</span>{/if}<input class="input mt-1" dir="ltr" placeholder={monitorSettings.iranTokenSet ? '••••••••' : 'توکن'} bind:value={iranToken} /></label>
+    <button class="btn-primary" onclick={saveMonitorSettings}>ذخیره</button>
   </section>
 
   <section class="card space-y-2 p-4 text-sm">

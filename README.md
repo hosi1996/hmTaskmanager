@@ -31,4 +31,10 @@ cd frontend && npm install && npm run dev   # http://localhost:5173 (پروکس�
 
 ## API (خلاصه)
 همه‌ی مسیرها زیر `/api`، احراز هویت با کوکی `sid`، درخواست‌های تغییردهنده با هدر `x-requested-with: hm`. `GET /health` برای مانیتورینگ.
-`auth` (login/logout/2FA/sessions/invite) · `projects` (+members/columns/labels/templates/workload) · `tasks` (+checklist/deps/time/bulk/views) · `comments` · `attachments` · `notifications` · `search` · `reports` (overview/members/workload/export.csv) · `telegram/groups` · `settings` · `users`.
+`auth` (login/logout/2FA/sessions/invite) · `projects` (+members/columns/labels/templates/workload/monitors) · `tasks` (+checklist/deps/time/bulk/views) · `comments` · `attachments` · `notifications` · `search` · `archive` · `reports` (overview/members/workload/export.csv) · `telegram/groups` · `settings` · `monitor-settings` · `users`.
+
+## مانیتورینگ دامنه (سرویس پایداری وب‌سایت)
+داخل هر پروژه، تب «مانیتورینگ» (فقط برای مدیر پروژه/مالک) امکان افزودن دامنه و چک خودکار آن را می‌دهد — دقیقاً همان چک‌های ربات uptimebot، این‌بار به‌صورت داخلی در بک‌اند (بدون بات جدا):
+DNS، Nameserver، MX، Ping، HTTP، HTTPS، ریدایرکت HTTP→HTTPS، گواهی SSL، سرعت پاسخ، انقضای دامنه (RDAP).
+هر دامنه بازه‌ی زمانی، چک‌های فعال، و محل چک (خارج/ایران/هر دو) مستقل دارد. اگر مشکلی پیدا شود، در پنل نوتیفیکیشن می‌رود و — در صورت وصل‌بودن پروژه به یک گروه تلگرام — همان‌جا هم گزارش می‌شود؛ وقتی مشکل رفع شود پیام «بازیابی شد» هم می‌آید.
+برای چک از ایران (اختیاری): فایل [`iran-checker/check.php`](iran-checker/check.php) (عیناً از پروژه‌ی uptimebot) را روی یک هاست ایرانی آپلود کنید، مقدار `TOKEN` داخل آن را عوض کنید، و آدرس + همان توکن را در پنل «مدیریت» ← «چک‌کننده‌ی ایران» وارد کنید.

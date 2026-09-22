@@ -1,6 +1,7 @@
-// موتور چک‌های مانیتورینگ دامنه — پیاده‌سازی جاوااسکریپتی همان چک‌های ربات uptimebot
+// موتور چک‌های مانیتورینگ دامنه — پیاده‌سازی جاوااسکریپتی همان چک‌های ربات uptimebot + چند چک اضافه
 import dns from 'node:dns/promises';
 import tls from 'node:tls';
+import net from 'node:net';
 import { domainToASCII } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -19,16 +20,23 @@ export const CHECKS = {
   ssl: 'گواهی SSL',
   speed: 'سرعت پاسخ',
   whois: 'انقضای دامنه',
+  keyword: 'وجود کلمه‌ی کلیدی در صفحه',
+  port: 'پورت سفارشی',
 };
-// چک‌هایی که نتیجه‌شان به محل اجرا وابسته نیست
+// چک‌هایی که نتیجه‌شان به محل اجرا وابسته نیست (همیشه یک نتیجه‌ی واحد دارند)
 export const LOCATION_FREE = new Set(['whois']);
-export const DEFAULT_CHECKS = Object.keys(CHECKS).filter((n) => n !== 'mx');
+// چک‌هایی که چک‌کننده‌ی ایران پشتیبانی نمی‌کند؛ همیشه از همین سرور اجرا می‌شوند
+export const REMOTE_UNSUPPORTED = new Set(['keyword', 'port']);
+export const DEFAULT_CHECKS = Object.keys(CHECKS).filter((n) => !['mx', 'keyword', 'port'].includes(n));
 export const INTERVALS = [1, 2, 5, 10, 15, 30, 60];
+export const RETENTIONS = [1, 3, 7, 14, 30, 90, 0]; // روز؛ 0 = هرگز پاک نشود
 
 const TIMEOUT = 10000;
 const SLOW_SECONDS = 3;
 const SSL_WARN_DAYS = 14;
 const DOMAIN_WARN_DAYS = 30;
+const WEAK_TLS = new Set(['TLSv1', 'TLSv1.1']);
+const KEYWORD_MAX_BYTES = 300000;
 const SECOND_LEVEL = new Set(['co', 'com', 'org', 'net', 'gov', 'ac', 'edu']);
 const DOMAIN_RE = /^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+(xn--[a-z0-9-]+|[a-z]{2,63})$/;
 const UA = { 'user-agent': 'hmTaskManager-Monitor/1.0' };
@@ -131,10 +139,13 @@ function checkSsl(domain) {
     try {
       socket = tls.connect({ host: domain, port: 443, servername: domain, timeout: TIMEOUT }, () => {
         const cert = socket.getPeerCertificate();
+        const proto = socket.getProtocol?.() || '';
         socket.end();
         if (!cert || !cert.valid_to) return finish({ ok: false, detail: 'گواهی یافت نشد' });
+        if (WEAK_TLS.has(proto)) return finish({ ok: false, detail: `نسخه‌ی قدیمی و ناامن ${proto}` });
         const days = Math.floor((new Date(cert.valid_to).getTime() - Date.now()) / 86400000);
-        finish(days < SSL_WARN_DAYS ? { ok: false, detail: `فقط ${days} روز تا انقضا` } : { ok: true, detail: `${days} روز تا انقضا` });
+        const suffix = proto ? ` · ${proto}` : '';
+        finish(days < SSL_WARN_DAYS ? { ok: false, detail: `فقط ${days} روز تا انقضا${suffix}` } : { ok: true, detail: `${days} روز تا انقضا${suffix}` });
       });
     } catch (e) {
       return finish({ ok: false, detail: errMsg(e) });
@@ -158,8 +169,54 @@ async function checkWhois(domain) {
   }
 }
 
-/** چک‌های محلی (روی همین سرور) را اجرا می‌کند */
-export async function runChecks(domain, names) {
+/** بررسی می‌کند که یک متن مشخص در صفحه‌ی اصلی سایت هست یا نه (برای تشخیص خرابی/دیفیس/پیام خطا) */
+async function checkKeyword(domain, keyword) {
+  if (!keyword) return { ok: null, detail: 'کلمه‌ی کلیدی تنظیم نشده' };
+  let lastErr = 'خطای نامشخص';
+  for (const scheme of ['https', 'http']) {
+    try {
+      const resp = await fetch(`${scheme}://${domain}`, { redirect: 'follow', signal: AbortSignal.timeout(TIMEOUT), headers: UA });
+      const reader = resp.body?.getReader();
+      let text = '';
+      if (reader) {
+        const decoder = new TextDecoder();
+        let read = 0;
+        while (read < KEYWORD_MAX_BYTES) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          text += decoder.decode(value, { stream: true });
+          read += value.length;
+        }
+        reader.cancel().catch(() => {});
+      } else {
+        text = await resp.text();
+      }
+      return text.includes(keyword)
+        ? { ok: true, detail: 'کلمه‌ی کلیدی در صفحه پیدا شد' }
+        : { ok: false, detail: 'کلمه‌ی کلیدی در صفحه پیدا نشد' };
+    } catch (e) {
+      lastErr = errMsg(e);
+    }
+  }
+  return { ok: false, detail: lastErr };
+}
+
+/** اتصال TCP به یک پورت دلخواه (برای سرویس‌های غیر HTTP مثل دیتابیس، SSH، ایمیل و…) */
+function checkPort(domain, port) {
+  if (!port) return Promise.resolve({ ok: null, detail: 'پورت تنظیم نشده' });
+  return new Promise((resolve) => {
+    const start = Date.now();
+    let done = false;
+    const finish = (r) => { if (!done) { done = true; resolve(r); } };
+    const socket = net.createConnection({ host: domain, port, timeout: TIMEOUT });
+    socket.once('connect', () => { const ms = Date.now() - start; socket.destroy(); finish({ ok: true, detail: `پورت ${port} باز است (${ms}ms)` }); });
+    socket.once('timeout', () => { socket.destroy(); finish({ ok: false, detail: 'timeout' }); });
+    socket.once('error', (e) => finish({ ok: false, detail: errMsg(e) }));
+  });
+}
+
+/** چک‌های محلی (روی همین سرور) را اجرا می‌کند؛ opts: {keyword?, port?} برای چک‌های اختصاصی */
+export async function runChecks(domain, names, opts = {}) {
   const wanted = new Set(names);
   const httpP = wanted.has('http') || wanted.has('redirect') ? fetchOnce(`http://${domain}`) : null;
   const httpsP = wanted.has('https') || wanted.has('speed') ? fetchOnce(`https://${domain}`) : null;
@@ -173,6 +230,8 @@ export async function runChecks(domain, names) {
         else if (n === 'ping') out[n] = await checkPing(domain);
         else if (n === 'ssl') out[n] = await checkSsl(domain);
         else if (n === 'whois') out[n] = await checkWhois(domain);
+        else if (n === 'keyword') out[n] = await checkKeyword(domain, opts.keyword);
+        else if (n === 'port') out[n] = await checkPort(domain, opts.port);
         else if (n === 'http') out[n] = checkHttp(await httpP);
         else if (n === 'https') out[n] = checkHttp(await httpsP);
         else if (n === 'redirect') out[n] = checkRedirect(await httpP, wanted.has('http'));

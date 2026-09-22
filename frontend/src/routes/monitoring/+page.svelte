@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { api } from '$lib/api.js';
   import { app, notice } from '$lib/state.svelte.js';
-  import { fmtDateTime, num } from '$lib/format.js';
+  import { fmtDateTime, monitorRows, num } from '$lib/format.js';
   import Icon from '$lib/Icon.svelte';
   import EmptyState from '$lib/EmptyState.svelte';
 
@@ -49,7 +49,7 @@
 
   function detailOf(m) {
     if (!m.lastLog) return [];
-    return Object.entries(m.lastLog.results).filter(([, r]) => r.ok === false);
+    return monitorRows(m.lastLog.results).filter((r) => r.ok === false);
   }
 </script>
 
@@ -103,7 +103,7 @@
         </div>
         {#if bad.length}
           <div class="mt-3 flex flex-wrap gap-1.5 border-t border-zinc-100 pt-3 dark:border-white/[0.06]">
-            {#each bad as [k, r]}<span class="chip bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300" title={r.detail}><Icon name="x" size={11} />{data.checks[k]}: {r.detail}</span>{/each}
+            {#each bad as r}<span class="chip bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300" title={r.detail}><Icon name="x" size={11} />{data.checks[r.name]}: {r.detail}</span>{/each}
           </div>
         {/if}
       </div>

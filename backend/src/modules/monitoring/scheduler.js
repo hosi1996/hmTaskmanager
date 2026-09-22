@@ -1,7 +1,8 @@
 import { prisma, redis } from '../../db.js';
-import { getIranConfig, processDomain } from './service.js';
+import { getIranConfig, processDomain, purgeLogs } from './service.js';
 
 const TICK_MS = 20000;
+const CLEANUP_MS = 3600000; // هر یک ساعت
 const MAX_PARALLEL = 5;
 
 /** استخر ساده برای اجرای همزمان محدود بدون وابستگی خارجی */
@@ -31,6 +32,20 @@ export function startMonitorScheduler(log) {
       log.error(e, 'monitor scheduler failed');
     }
   };
+
+  // پاک‌سازی خودکار لاگ‌های قدیمی، طبق بازه‌ی نگهداریِ هر دامنه
+  const cleanup = async () => {
+    if (!(await redis.set('lock:monitor-cleanup', '1', 'PX', CLEANUP_MS - 60000, 'NX'))) return;
+    try {
+      const domains = await prisma.monitorDomain.findMany({ where: { logRetentionDays: { gt: 0 } }, select: { id: true, logRetentionDays: true } });
+      for (const d of domains) await purgeLogs(d.id, d.logRetentionDays).catch(() => {});
+    } catch (e) {
+      log.error(e, 'monitor log cleanup failed');
+    }
+  };
+
   setTimeout(tick, 10000);
   setInterval(tick, TICK_MS).unref();
+  setTimeout(cleanup, 30000);
+  setInterval(cleanup, CLEANUP_MS).unref();
 }

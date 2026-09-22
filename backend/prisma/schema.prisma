@@ -394,6 +394,9 @@ model MonitorDomain {
   location       String    @default("both") // out | iran | both
   notifyTelegram Boolean   @default(true)
   notifyPanel    Boolean   @default(true)
+  keyword        String? // برای چک «وجود کلمه‌ی کلیدی در صفحه»
+  port           Int? // برای چک «پورت سفارشی»
+  logRetentionDays Int     @default(30) // پاک‌سازی خودکار لاگ‌های قدیمی‌تر از این تعداد روز؛ 0 = هرگز
   lastRunAt      DateTime?
   lastOk         Boolean   @default(true)
   createdAt      DateTime  @default(now())

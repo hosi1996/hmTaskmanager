@@ -11,6 +11,8 @@ export const toInput = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '');
 export const num = (n) => new Intl.NumberFormat('fa-IR').format(n ?? 0);
 export const isOverdue = (t) => t.dueDate && !t.column?.isDone && new Date(t.dueDate) < new Date();
 export const fmtMin = (m) => (m >= 60 ? `${num(Math.floor(m / 60))}س ${num(m % 60)}د` : `${num(m)}د`);
+/** نتایج مانیتورینگ همیشه آرایه‌اند؛ این تابع برای سازگاری با لاگ‌های قدیمی‌تر (فرمت شیء) هم کار می‌کند */
+export const monitorRows = (results) => (Array.isArray(results) ? results : Object.entries(results || {}).map(([name, r]) => ({ name, ...r })));
 
 /** مارک‌داون → HTML امن (DOMPurify) */
 export const md = (s) => DOMPurify.sanitize(marked.parse(s ?? '', { breaks: true, async: false }), { USE_PROFILES: { html: true } });

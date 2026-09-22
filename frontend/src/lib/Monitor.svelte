@@ -87,7 +87,14 @@
   const statusOf = (m) => (!m.enabled ? 'off' : !m.lastLog ? 'unknown' : m.lastLog.ok ? 'ok' : 'bad');
   const STATUS_DOT = { ok: 'bg-emerald-500', bad: 'bg-red-500', off: 'bg-zinc-300 dark:bg-white/20', unknown: 'bg-amber-400' };
   const STATUS_LABEL = { ok: 'سالم', bad: 'دارای مشکل', off: 'غیرفعال', unknown: 'هنوز بررسی نشده' };
-  const originLabel = { local: 'خارج', remote: 'ایران', general: 'عمومی' };
+  const ORIGIN = { local: ['خارج از ایران', 'globe'], remote: ['ایران', 'flag'], general: ['عمومی', 'circle'] };
+
+  /** نتایج آخرین بررسی را بر اساس محل اجرا (خارج/ایران/عمومی) دسته‌بندی می‌کند */
+  function groupByOrigin(results) {
+    const g = { local: [], remote: [], general: [] };
+    for (const [k, r] of Object.entries(results)) (g[r.origin] ?? g.general).push([k, r]);
+    return g;
+  }
 </script>
 
 <div class="mb-5 flex flex-wrap items-center gap-3">
@@ -152,7 +159,12 @@
         <button class="flex w-full items-center gap-3 p-4 text-start" onclick={() => toggleOpen(m)}>
           <span class="h-2.5 w-2.5 shrink-0 rounded-full {STATUS_DOT[st]}"></span>
           <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2"><span class="truncate font-bold" dir="ltr">{m.domain}</span><span class="chip bg-zinc-100 text-zinc-500 dark:bg-white/10">{STATUS_LABEL[st]}</span></div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="truncate font-bold" dir="ltr">{m.domain}</span>
+              <span class="chip bg-zinc-100 text-zinc-500 dark:bg-white/10">{STATUS_LABEL[st]}</span>
+              {#if data.iranEnabled}<span class="chip bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">{LOCATIONS[m.location]}</span>{/if}
+              {#if m.uptime24h != null}<span class="chip {m.uptime24h >= 99 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : m.uptime24h >= 90 ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' : 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300'}">{num(m.uptime24h)}٪ سالم (۲۴س)</span>{/if}
+            </div>
             <div class="mt-0.5 text-xs text-zinc-500">هر {num(m.intervalMin)} دقیقه · {num(m.checks.length)} چک{#if m.lastRunAt} · آخرین بررسی: <span class="tabnum">{fmtDateTime(m.lastRunAt)}</span>{/if}</div>
           </div>
           <Icon name="chev-down" size={16} class="text-zinc-400 transition {openId === m.id ? 'rotate-180' : ''}" />
@@ -161,16 +173,27 @@
         {#if openId === m.id}
           <div class="border-t border-zinc-100 p-4 dark:border-white/[0.06]">
             {#if m.lastLog}
-              <div class="mb-4 flex flex-wrap gap-1.5">
-                {#each Object.entries(m.lastLog.results) as [k, r]}
-                  <span class="chip {r.ok === true ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : r.ok === false ? 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300' : 'bg-zinc-100 text-zinc-500 dark:bg-white/10'}" title={r.detail}>
-                    <Icon name={r.ok === true ? 'check' : r.ok === false ? 'x' : 'circle'} size={11} />{data.checks[k]}
-                    {#if data.iranEnabled && r.origin && r.origin !== 'general'}<span class="opacity-60">· {originLabel[r.origin]}</span>{/if}
-                  </span>
+              {@const groups = groupByOrigin(m.lastLog.results)}
+              <div class="mb-4 space-y-3">
+                {#each ['local', 'remote', 'general'] as origin}
+                  {#if groups[origin].length}
+                    <div>
+                      {#if data.iranEnabled}
+                        <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-zinc-500"><Icon name={ORIGIN[origin][1]} size={12} />{ORIGIN[origin][0]}</div>
+                      {/if}
+                      <div class="flex flex-wrap gap-1.5">
+                        {#each groups[origin] as [k, r]}
+                          <span class="chip {r.ok === true ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : r.ok === false ? 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300' : 'bg-zinc-100 text-zinc-500 dark:bg-white/10'}" title={r.detail}>
+                            <Icon name={r.ok === true ? 'check' : r.ok === false ? 'x' : 'circle'} size={11} />{data.checks[k]}
+                          </span>
+                        {/each}
+                      </div>
+                    </div>
+                  {/if}
                 {/each}
               </div>
               {#each Object.entries(m.lastLog.results).filter(([, r]) => r.ok === false) as [k, r]}
-                <div class="mb-1 text-xs text-red-600 dark:text-red-400">{data.checks[k]}: {r.detail}</div>
+                <div class="mb-1 text-xs text-red-600 dark:text-red-400">{data.checks[k]}{#if data.iranEnabled} ({ORIGIN[r.origin]?.[0] ?? ORIGIN.general[0]}){/if}: {r.detail}</div>
               {/each}
             {:else}
               <div class="mb-4 text-sm text-zinc-400">هنوز بررسی‌ای انجام نشده است.</div>

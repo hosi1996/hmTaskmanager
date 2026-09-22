@@ -55,7 +55,7 @@
     else if (!typing && e.key === '?') { help = !help; }
     else if (!typing && e.key === 'g') { window.__g = Date.now(); }
     else if (!typing && window.__g && Date.now() - window.__g < 900) {
-      const map = { h: '/', p: '/projects', r: '/reports', n: '/notifications', s: '/settings' };
+      const map = { h: '/', p: '/projects', r: '/reports', m: '/monitoring', n: '/notifications', s: '/settings' };
       if (map[e.key]) goto(map[e.key]);
       window.__g = 0;
     }
@@ -72,13 +72,13 @@
   const nav = $derived([
     ['/', isClient ? 'درخواست‌های من' : 'داشبورد', 'dashboard'],
     ['/projects', 'پروژه‌ها', 'folder'],
-    ...(isClient ? [] : [['/reports', 'گزارش‌ها', 'chart'], ['/archive', 'بایگانی', 'archive']]),
+    ...(isClient ? [] : [['/reports', 'گزارش‌ها', 'chart'], ['/monitoring', 'مانیتورینگ', 'activity'], ['/archive', 'بایگانی', 'archive']]),
     ['/notifications', 'اعلان‌ها', 'bell'],
     ['/settings', 'تنظیمات', 'sliders'],
     ...(isOwner() ? [['/admin', 'مدیریت', 'shield']] : []),
   ]);
   const active = (h) => (h === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(h));
-  const SHORTCUTS = [['n', 'تسک سریع'], ['/', 'جستجو'], ['Ctrl K', 'جستجو'], ['g h', 'داشبورد'], ['g p', 'پروژه‌ها'], ['g r', 'گزارش‌ها'], ['g n', 'اعلان‌ها'], ['g s', 'تنظیمات'], ['?', 'این راهنما'], ['Esc', 'بستن']];
+  const SHORTCUTS = [['n', 'تسک سریع'], ['/', 'جستجو'], ['Ctrl K', 'جستجو'], ['g h', 'داشبورد'], ['g p', 'پروژه‌ها'], ['g r', 'گزارش‌ها'], ['g m', 'مانیتورینگ'], ['g n', 'اعلان‌ها'], ['g s', 'تنظیمات'], ['?', 'این راهنما'], ['Esc', 'بستن']];
 </script>
 
 <svelte:window onkeydown={keys} />

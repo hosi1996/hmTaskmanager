@@ -12,12 +12,14 @@
   let trend = $state([]);
   let feed = $state([]);
   let filter = $state('all');
+  let problems = $state([]);
 
   $effect(() => {
     api('/tasks?assignee=me&status=open&sort=due').then((r) => (tasks = r.tasks));
     api('/reports/overview').then((r) => (ov = r));
     api('/reports/trend').then((r) => (trend = r.days));
     api('/activity').then((r) => (feed = r.activity));
+    api('/monitors').then((r) => (problems = r.domains.filter((m) => m.enabled && m.lastLog && !m.lastLog.ok))).catch(() => {});
   });
 
   const endOf = (d) => { const x = new Date(d); x.setHours(23, 59, 59, 999); return x; };
@@ -53,6 +55,15 @@
   </div>
   <a href="/projects" class="btn-outline">همه‌ی پروژه‌ها <Icon name="arrow-left" size={15} /></a>
 </div>
+
+{#if problems.length}
+  <a href="/monitoring" class="pop-in mb-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm transition hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:hover:bg-red-500/15">
+    <span class="tile h-10 w-10 bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-300"><Icon name="alert" size={18} /></span>
+    <div class="flex-1"><b class="text-red-700 dark:text-red-300">{num(problems.length)} دامنه دچار مشکل شده{problems.length > 1 ? '‌اند' : ''}</b>
+      <div class="mt-0.5 text-xs text-red-600/80 dark:text-red-300/70" dir="ltr">{problems.slice(0, 4).map((p) => p.domain).join(' · ')}{#if problems.length > 4} …{/if}</div></div>
+    <Icon name="chev-left" size={16} class="text-red-500" />
+  </a>
+{/if}
 
 <div class="stagger mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
   {#each STATS as [label, v, icon, tone]}

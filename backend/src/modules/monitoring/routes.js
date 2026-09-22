@@ -10,7 +10,7 @@ const validChecks = (arr) => {
   return list;
 };
 
-const dto = (m, log) => ({
+const dto = (m, log, uptime24h) => ({
   id: m.id,
   projectId: m.projectId,
   domain: m.domain,
@@ -25,7 +25,18 @@ const dto = (m, log) => ({
   lastOk: m.lastOk,
   createdAt: m.createdAt,
   lastLog: log ? { ok: log.ok, results: log.results, createdAt: log.createdAt } : null,
+  uptime24h: uptime24h ?? null,
 });
+
+/** درصد سالم‌بودن در ۲۴ ساعت اخیر، بر اساس لاگ‌های ثبت‌شده */
+async function uptimeFor(domainId) {
+  const since = new Date(Date.now() - 24 * 3600 * 1000);
+  const [total, ok] = await Promise.all([
+    prisma.monitorLog.count({ where: { domainId, createdAt: { gte: since } } }),
+    prisma.monitorLog.count({ where: { domainId, createdAt: { gte: since }, ok: true } }),
+  ]);
+  return total ? Math.round((ok / total) * 100) : null;
+}
 
 const baseBody = {
   intervalMin: z.number().int().optional(),
@@ -44,11 +55,33 @@ async function loadMonitor(req) {
 }
 
 export default async function monitoring(app) {
+  // فهرست همه‌ی دامنه‌های قابل‌مدیریت کاربر، برای داشبورد کلی مانیتورینگ (مالک: همه، مدیر پروژه: پروژه‌های خودش)
+  app.get('/monitors', async (req) => {
+    const pw = isOwner(req.user) ? {} : { members: { some: { userId: req.user.id, role: 'MANAGER' } } };
+    const domains = await prisma.monitorDomain.findMany({
+      where: { project: { deletedAt: null, ...pw } },
+      include: { project: { select: { id: true, name: true, color: true, icon: true } } },
+      orderBy: { domain: 'asc' },
+    });
+    const [logs, uptimes] = await Promise.all([
+      Promise.all(domains.map((m) => prisma.monitorLog.findFirst({ where: { domainId: m.id }, orderBy: { createdAt: 'desc' } }))),
+      Promise.all(domains.map((m) => uptimeFor(m.id))),
+    ]);
+    return {
+      domains: domains.map((m, i) => ({ ...dto(m, logs[i], uptimes[i]), project: m.project })),
+      checks: CHECKS,
+      iranEnabled: !!(await getIranConfig()),
+    };
+  });
+
   app.get('/projects/:id/monitors', async (req) => {
     await requireProjectRole(req.user, req.params.id, 'MANAGER');
     const domains = await prisma.monitorDomain.findMany({ where: { projectId: req.params.id }, orderBy: { domain: 'asc' } });
-    const logs = await Promise.all(domains.map((m) => prisma.monitorLog.findFirst({ where: { domainId: m.id }, orderBy: { createdAt: 'desc' } })));
-    return { domains: domains.map((m, i) => dto(m, logs[i])), checks: CHECKS, intervals: INTERVALS, iranEnabled: !!(await getIranConfig()) };
+    const [logs, uptimes] = await Promise.all([
+      Promise.all(domains.map((m) => prisma.monitorLog.findFirst({ where: { domainId: m.id }, orderBy: { createdAt: 'desc' } }))),
+      Promise.all(domains.map((m) => uptimeFor(m.id))),
+    ]);
+    return { domains: domains.map((m, i) => dto(m, logs[i], uptimes[i])), checks: CHECKS, intervals: INTERVALS, iranEnabled: !!(await getIranConfig()) };
   });
 
   app.post('/projects/:id/monitors', async (req) => {
